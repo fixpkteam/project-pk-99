@@ -218,9 +218,8 @@ void main() {
       'aamir@example.com',
     );
     await tester.enterText(find.byType(TextFormField).at(3), 'safe-pass-123');
-    await tester.ensureVisible(
-      find.widgetWithText(FilledButton, 'Create account'),
-    );
+    await tester.drag(find.byType(ListView).last, const Offset(0, -280));
+    await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
     await tester.pumpAndSettle();
 

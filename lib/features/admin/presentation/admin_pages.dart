@@ -399,8 +399,9 @@ class _AdminContentListState extends ConsumerState<_AdminContentList> {
         }
       }
       ref.invalidate(adminContentRowsProvider(table.key));
-      if (context.mounted)
+      if (context.mounted) {
         _showToast(context, row == null ? 'Record added.' : 'Changes saved.');
+      }
     } on Object {
       for (final path in uploadedPaths) {
         try {

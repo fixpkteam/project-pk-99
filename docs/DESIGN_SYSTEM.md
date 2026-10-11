@@ -29,11 +29,11 @@ Typography: display 28/34 bold; page title 22/28 bold; section title 18/24 semib
 | Primary/secondary/outline/text button | `AppButton` with four variants, busy and disabled states |
 | Service card | `ServiceCard` |
 | Request/quote card | `SummaryCard`, composed with meaningful status |
-| Product/project card | `MediaCard` with injectable media and action |
+| Product/project card | `MediaCard` with injectable media and action; catalogue pages render published Supabase media with fallbacks |
 | Status chip | `StatusChip` with semantic tones |
 | Input/dropdown | themed Material form controls and validated gallery example |
 | Search | `AppSearchField`, clear action and working local filter |
-| Upload | `UploadControl`, sample selection/removal; actual files are Phase 4 |
+| Upload | `UploadControl`, sample selection/removal; actual files were introduced in Delivery 3 |
 | Date | themed Material date picker in gallery |
 | Bottom navigation/app bar | `AppShell` and Material components |
 | Dialog/sheet/snackbar | confirmation helper, safe-area sheet and feedback helper |

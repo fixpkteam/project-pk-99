@@ -22,7 +22,7 @@ void main() {
     expect(find.text('Solar Solutions'), findsNothing);
     await tester.tap(find.byType(NavigationDestination).at(4));
     await tester.pumpAndSettle();
-    expect(find.text('Welcome to FixPK'), findsOneWidget);
+    expect(find.text('Your FixPK account'), findsOneWidget);
     await tester.tap(find.byType(NavigationDestination).at(1));
     await tester.pumpAndSettle();
     expect(find.text('CCTV'), findsOneWidget);
@@ -41,6 +41,28 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Engineering Solutions.\nBuilt to Last.'), findsOneWidget);
   });
+
+  testWidgets('product and project routes have useful preview states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FixPkApp()));
+    await tester.pumpAndSettle();
+
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Browse products'));
+    await tester.tap(find.text('Browse products'));
+    await tester.pumpAndSettle();
+    expect(find.text('Connect to see the live catalogue'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(NavigationDestination).at(3));
+    await tester.pumpAndSettle();
+    expect(find.text('Connect to see FixPK projects'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('startup error is recoverable and does not expose credentials', (
     tester,
   ) async {
@@ -99,5 +121,33 @@ void main() {
     expect(find.text('Engineering Solutions.\nBuilt to Last.'), findsOneWidget);
     expect(initializedUrl, 'https://example.supabase.co');
     expect(initializedKey, 'sb_publishable_test');
+  });
+
+  testWidgets('guest can reach account creation and sees preview guidance', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const ProviderScope(child: FixPkApp()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(NavigationDestination).at(4));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Create account'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Join FixPK'), findsOneWidget);
+    await tester.enterText(find.byType(TextFormField).at(0), 'Aamir Hassan');
+    await tester.enterText(find.byType(TextFormField).at(1), '+923001234567');
+    await tester.enterText(
+      find.byType(TextFormField).at(2),
+      'aamir@example.com',
+    );
+    await tester.enterText(find.byType(TextFormField).at(3), 'safe-pass-123');
+    await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Connect the Supabase environment to use customer accounts.'),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
   });
 }

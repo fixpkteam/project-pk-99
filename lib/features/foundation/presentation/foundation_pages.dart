@@ -81,7 +81,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) => PageBody(
     storageKey: 'home',
     children: [
-      const StatusChip(label: 'Foundation preview', tone: StatusTone.neutral),
+      const StatusChip(label: 'Engineering and technical solutions'),
       const SizedBox(height: 24),
       Container(
         padding: const EdgeInsets.all(24),
@@ -117,7 +117,7 @@ class HomePage extends StatelessWidget {
       ),
       const SizedBox(height: 8),
       const Text(
-        'Explore the FixPK navigation and design foundation. Service requests and account features arrive in the following phases.',
+        'Browse services for homes, businesses and industrial properties. Sign in to manage your FixPK account.',
       ),
       const SizedBox(height: 20),
       for (final service in foundationServices.take(3)) ...[
@@ -129,6 +129,37 @@ class HomePage extends StatelessWidget {
         ),
         const SizedBox(height: 12),
       ],
+      const SizedBox(height: 8),
+      ContentCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Products and projects',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            const Text('Explore FixPK solutions and selected completed work.'),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 12,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => context.push('/products'),
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  label: const Text('Browse products'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: () => context.go('/projects'),
+                  icon: const Icon(Icons.apartment_outlined),
+                  label: const Text('View projects'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
       const SizedBox(height: 12),
       ContentCard(
         child: Column(
@@ -153,86 +184,6 @@ class HomePage extends StatelessWidget {
   );
 }
 
-class ServicesPage extends StatefulWidget {
-  const ServicesPage({super.key});
-  @override
-  State<ServicesPage> createState() => _ServicesPageState();
-}
-
-class _ServicesPageState extends State<ServicesPage> {
-  final _search = TextEditingController();
-  String _query = '';
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final matches = foundationServices
-        .where(
-          (service) => '${service.title} ${service.subtitle}'
-              .toLowerCase()
-              .contains(_query.toLowerCase()),
-        )
-        .toList();
-    return PageBody(
-      storageKey: 'services',
-      children: [
-        const Text(
-          'Service categories',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 8),
-        const Text(
-          'Navigation preview · catalogue connection is planned for Phase 3.',
-        ),
-        const SizedBox(height: 20),
-        AppSearchField(
-          controller: _search,
-          onChanged: (value) => setState(() => _query = value),
-        ),
-        const SizedBox(height: 20),
-        if (matches.isEmpty)
-          AppStatePanel(
-            title: 'No matching services',
-            message: 'Try another name or clear your search.',
-            actionLabel: 'Clear search',
-            onAction: () => setState(() {
-              _query = '';
-              _search.clear();
-            }),
-          ),
-        for (final service in matches) ...[
-          ServiceCard(
-            title: service.title,
-            subtitle: service.subtitle,
-            icon: service.icon,
-            onTap: () => showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              useSafeArea: true,
-              builder: (context) => SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: AppStatePanel(
-                    title: service.title,
-                    message: 'Detailed service information and requests will be available in a later phase.',
-                    actionLabel: 'Close',
-                    onAction: () => Navigator.pop(context),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-        ],
-      ],
-    );
-  }
-}
-
 class PlannedPage extends StatelessWidget {
   const PlannedPage({
     super.key,
@@ -252,43 +203,6 @@ class PlannedPage extends StatelessWidget {
         icon: icon,
         actionLabel: 'Explore services',
         onAction: () => context.go('/services'),
-      ),
-    ],
-  );
-}
-
-class AccountPage extends StatelessWidget {
-  const AccountPage({super.key});
-  @override
-  Widget build(BuildContext context) => PageBody(
-    children: [
-      Text(
-        'Welcome to FixPK',
-        style: Theme.of(context).textTheme.headlineSmall,
-      ),
-      const SizedBox(height: 8),
-      const Text(
-        'You are exploring the Phase 1 foundation. Sign-in and profile management are planned for Phase 2.',
-      ),
-      const SizedBox(height: 24),
-      ServiceCard(
-        title: 'Component gallery',
-        subtitle: 'Explore the reusable design system',
-        icon: Icons.palette_outlined,
-        onTap: () => context.push('/components'),
-      ),
-      const SizedBox(height: 12),
-      const ContentCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('FixPK', style: TextStyle(fontWeight: FontWeight.w700)),
-            SizedBox(height: 8),
-            Text(
-              'Engineering, maintenance, installation, product and project solutions.',
-            ),
-          ],
-        ),
       ),
     ],
   );

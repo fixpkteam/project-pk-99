@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/app_config.dart';
 import '../core/logging/app_logger.dart';
 import '../core/storage/app_storage.dart';
+import '../features/auth/data/auth_repository.dart';
 
 final configProvider = Provider<AppConfig>(
   (ref) => AppConfig.fromEnvironment(),
@@ -38,6 +39,16 @@ final supabaseClientProvider = Provider<SupabaseClient>((ref) {
     throw StateError('Supabase is not initialized.');
   }
   return Supabase.instance.client;
+});
+
+final authRepositoryProvider = Provider<AuthRepository>(
+  (ref) => AuthRepository(ref.watch(supabaseClientProvider)),
+);
+
+final authUserProvider = StreamProvider<User?>((ref) {
+  final config = ref.watch(configProvider);
+  if (config.preview) return Stream<User?>.value(null);
+  return ref.watch(authRepositoryProvider).userChanges;
 });
 
 final bootstrapProvider = FutureProvider<AppConfig>((ref) async {

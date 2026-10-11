@@ -4,7 +4,28 @@ import 'package:go_router/go_router.dart';
 
 import '../core/widgets/components.dart';
 import '../features/foundation/presentation/component_gallery.dart';
-import '../features/foundation/presentation/foundation_pages.dart';
+import '../features/foundation/presentation/foundation_pages.dart'
+    show HomePage;
+import '../features/auth/presentation/auth_page.dart'
+    show AccountPage, AuthPage;
+import '../features/services/presentation/services_pages.dart'
+    show ServiceDetailPage, ServicesPage;
+import '../features/catalogue/presentation/catalogue_pages.dart'
+    show ProductDetailPage, ProductsPage, ProjectDetailPage, ProjectsPage;
+import '../features/care/presentation/care_pages.dart'
+    show
+        FaqPage,
+        LegalPage,
+        NotificationsPage,
+        PreferencesPage,
+        ReviewComposerPage,
+        ReviewsPage,
+        StaffOperationsPage,
+        SupportPage;
+import '../features/requests/data/request_repository.dart';
+import '../features/requests/presentation/addresses_page.dart';
+import '../features/requests/presentation/request_pages.dart';
+import '../features/requests/presentation/request_wizard_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final router = createRouter();
@@ -16,6 +37,96 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
   initialLocation: initialLocation,
   routes: [
     GoRoute(path: '/', redirect: (context, state) => '/home'),
+    GoRoute(
+      path: '/sign-in',
+      builder: (context, state) =>
+          AuthPage(redirectTo: state.uri.queryParameters['redirect']),
+    ),
+    GoRoute(
+      path: '/sign-up',
+      builder: (context, state) => AuthPage(
+        createAccount: true,
+        redirectTo: state.uri.queryParameters['redirect'],
+      ),
+    ),
+    GoRoute(
+      path: '/requests/new',
+      builder: (context, state) => RequestWizardPage(
+        serviceId: state.uri.queryParameters['serviceId'] ?? '',
+        enquiryContext: state.uri.queryParameters['context'],
+      ),
+    ),
+    GoRoute(
+      path: '/requests/:requestId',
+      builder: (context, state) =>
+          RequestDetailPage(requestId: state.pathParameters['requestId']!),
+    ),
+    GoRoute(
+      path: '/products',
+      builder: (context, state) =>
+          ProductsPage(enquiryContext: state.uri.queryParameters['enquiry']),
+    ),
+    GoRoute(
+      path: '/products/:productId',
+      builder: (context, state) => ProductDetailPage(
+        productId: state.pathParameters['productId']!,
+        enquiryContext: state.extra is String ? state.extra! as String : null,
+      ),
+    ),
+    GoRoute(
+      path: '/projects/:projectId',
+      builder: (context, state) =>
+          ProjectDetailPage(projectId: state.pathParameters['projectId']!),
+    ),
+    GoRoute(
+      path: '/account/addresses',
+      builder: (context, state) => const AddressesPage(),
+    ),
+    GoRoute(
+      path: '/account/addresses/edit',
+      builder: (context, state) => AddressEditorPage(
+        address: state.extra is CustomerAddress
+            ? state.extra! as CustomerAddress
+            : null,
+      ),
+    ),
+    GoRoute(
+      path: '/account/notifications',
+      builder: (context, state) => const NotificationsPage(),
+    ),
+    GoRoute(
+      path: '/account/support',
+      builder: (context, state) => const SupportPage(),
+    ),
+    GoRoute(path: '/account/faq', builder: (context, state) => const FaqPage()),
+    GoRoute(
+      path: '/account/preferences',
+      builder: (context, state) => const PreferencesPage(),
+    ),
+    GoRoute(
+      path: '/account/reviews',
+      builder: (context, state) => const ReviewsPage(),
+    ),
+    GoRoute(
+      path: '/account/reviews/new/:jobId',
+      builder: (context, state) =>
+          ReviewComposerPage(jobId: state.pathParameters['jobId']!),
+    ),
+    GoRoute(
+      path: '/account/legal',
+      builder: (context, state) => const LegalPage(),
+    ),
+    GoRoute(
+      path: '/staff',
+      builder: (context, state) => const StaffOperationsPage(),
+    ),
+    GoRoute(
+      path: '/services/:serviceId',
+      builder: (context, state) => ServiceDetailPage(
+        serviceId: state.pathParameters['serviceId']!,
+        enquiryContext: state.uri.queryParameters['enquiry'],
+      ),
+    ),
     StatefulShellRoute.indexedStack(
       builder: (context, state, shell) => AppShell(shell: shell),
       branches: [
@@ -31,7 +142,9 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
           routes: [
             GoRoute(
               path: '/services',
-              builder: (context, state) => const ServicesPage(),
+              builder: (context, state) => ServicesPage(
+                enquiryContext: state.uri.queryParameters['enquiry'],
+              ),
             ),
           ],
         ),
@@ -39,11 +152,7 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
           routes: [
             GoRoute(
               path: '/requests',
-              builder: (context, state) => const PlannedPage(
-                title: 'Your service journey',
-                message: 'Requests, quotations and work updates will appear here when those features are connected.',
-                icon: Icons.assignment_outlined,
-              ),
+              builder: (context, state) => const RequestsPage(),
             ),
           ],
         ),
@@ -51,11 +160,7 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
           routes: [
             GoRoute(
               path: '/projects',
-              builder: (context, state) => const PlannedPage(
-                title: 'Projects by FixPK',
-                message: 'The project portfolio will be added with verified details and approved photography.',
-                icon: Icons.apartment_outlined,
-              ),
+              builder: (context, state) => const ProjectsPage(),
             ),
           ],
         ),

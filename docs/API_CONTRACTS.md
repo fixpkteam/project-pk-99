@@ -1,38 +1,49 @@
-# Backend contracts — design only
+# Backend contracts
 
-No application endpoint or table is deployed by this client integration. The pinned Supabase Flutter SDK initializes during connected startup and provides the client for later feature repositories. No database query is made until a feature calls a repository.
+The Flutter app talks to Supabase using the publishable key and the signed-in user's JWT. RLS is the access boundary; customer UI visibility is not authorization.
 
-## Query contracts
+## Implemented customer reads and writes
 
-| Repository | Read contract | Visibility |
+| Feature | Tables/objects | Access |
 |---|---|---|
-| ServiceRepository | published categories/services, current form version, coverage | guest |
-| RequestRepository | cursor-paginated own requests and visible events | authenticated owner |
-| SurveyRepository | own survey/appointment summaries | authenticated owner |
-| QuoteRepository | own published quote revision with items and permitted actions | authenticated owner |
-| ProductRepository | published products, specs and media | guest |
-| ProjectRepository | published portfolio | guest |
-| SupportRepository | own tickets and customer-visible messages | authenticated owner |
+| Catalogue | published `service_categories`, `services`, `service_questions`, `service_question_options` | Guest reads where policy permits |
+| Addresses | `addresses` | Customer reads and writes own rows |
+| Request submission | `service_requests`, `service_request_answers`, `request-attachments` bucket, `request_attachments` | Customer inserts own request and answers; storage path is `{auth.uid()}/{request_id}/{file}` |
+| Request history | `service_requests` | Customer reads own rows |
+| Surveys and appointments | `site_surveys`, `appointments` | Customer reads own records; no direct customer writes |
+| Quotes | `quotes`, `quote_items`, `quote-documents` bucket | Customer reads own non-draft quote; decisions use RPC |
+| Products | published `product_categories`, `products`, `product_images`, `product_specifications`, `product-images` bucket | Guest reads published products/media; no customer write |
+| Projects | published `projects`, `project_images`, `project-images` bucket | Guest reads published projects/media; no customer write |
+| Job tracking | `jobs` | Customer reads jobs through ownership of the linked service request; staff/vendor assignment and internal notes are excluded |
 
-Pagination uses stable `(created_at,id)` cursors; catalogue list pages default to 20. DTOs validate unknown enums and missing fields instead of assuming valid backend data. Realtime is an invalidation signal followed by an authorized read.
+`RequestRepository` maps table rows into feature DTOs and is the only request feature layer that imports Supabase. Private projections exclude staff notes.
 
-## Command envelope
+## Required customer command functions
 
-Commands carry an idempotency UUID, typed payload and an expected version where relevant. Caller identity comes from the verified JWT, never a client-selected role or owner field. Response includes entity ID, public reference, server timestamp and resulting state. Transport errors map to configuration, network, unauthenticated, forbidden, validation, conflict, rate-limited or unavailable failures. User copy must not display raw provider exceptions.
+Run `supabase/sql/request_quote_commands.sql` in the Supabase SQL Editor after the existing FixPK schema and RLS policies. It adds:
 
-| Command | Transactional guarantees |
-|---|---|
-| SubmitRequest | validate form version, answers, owner address, coverage and attachment ownership; create request/answers/event/outbox once |
-| RequestSurvey | ensure owner and valid request; record preference without promising availability |
-| ConfirmAppointment | staff permission; linked entities share request; reject resource overlap |
-| PublishQuote | estimator permission; server totals; immutable published snapshot; replace prior actionable version |
-| DecideQuote | owner, current revision and expiry checked under lock; one terminal decision; event/outbox |
-| TransitionJob | staff permission and allowed transition; atomic request/job/event consistency |
-| SubmitReview | completed job owned by caller; one review per job |
-| SendSupportMessage | ticket ownership/role and visibility; idempotent insertion |
+- `request_site_survey`: checks `auth.uid()` ownership, locks the request, prevents duplicate active survey requests, and records the requested time.
+- `decide_quote`: checks ownership, locks and validates the current sent quote and expiry, then records an approval/rejection or a revision note.
 
-Quote PDF generation and push delivery run from durable post-transaction work, not inside the customer mutation transaction. Privileged functions must authenticate and authorize before using service credentials. Published public media differs from private request evidence.
+The user reports that these functions have been run in Supabase. Do not put a service-role key in Flutter. Live database access was not available for validation in this workspace.
 
-## Admin boundary
+## Transaction and consistency notes
 
-Operations, estimators, support and content editors have separate server-enforced permissions. Customer DTOs must exclude internal notes, vendor contacts and moderation reasons. Use explicit safe projections; do not fetch private columns and hide them only in widgets.
+A submitted request row is created before its answer rows and uploaded files because Supabase Storage paths include its UUID. If later writes fail, the app routes to the durable request and warns the customer against submitting a duplicate. A future server command/outbox should make request, answers and upload metadata more atomic and support resumable attachment uploads.
+
+Quote revision requests are recorded in `customer_decision_note`; the agreed quote status enum has no separate revision-request state. Quote totals must be computed and frozen by trusted staff/backend workflows, never by the Flutter client.
+
+
+## Products, projects and job tracking
+
+`CatalogueRepository` queries only published product categories/products and projects. Product specifications and image metadata are fetched by parent ID; image binaries remain in the public `product-images` and `project-images` buckets. Public object URLs are constructed from approved stored object paths. Database RLS also requires the parent product/project to remain published.
+
+`JobsRepository` reads only customer-facing job fields for a service request. It never selects `staff_notes` or `job_assignments`. The display summarizes the job's current status and schedule/completion timestamps; the approved schema has no separate `job_events` table, so the UI does not invent historical status timestamps.
+
+Product and similar-project enquiry context travels through service selection and is prefilled into the existing request's customer notes. This avoids introducing an unapproved inquiry table.
+
+## Combined Delivery 5 — customer care and staff operations
+
+The care feature uses only the approved schema columns: notifications are read/marked read; support tickets are created and listed for their owner; published FAQs are read by language; user preferences are upserted by their owner; and reviews are submitted for completed jobs and moderated by staff. The schema does not include device tokens/outbox, support messages, or notification entity keys. Therefore the client provides an in-app inbox, a ticket status/history view, and preference controls; it does not claim outbound push delivery or customer/staff replies.
+
+The staff console reads bounded request, job, ticket, and pending-review queues. Available controls are intentionally limited to job status, ticket status, and review status. The staff UI checks `user_roles` for role-specific controls, but UI checks alone do not secure writes. The supplied core SQL's `staff_manage` policies are broad across staff roles; run `supabase/sql/staff_role_policies.sql` to replace those policies on jobs, support tickets, and reviews with role-scoped writes. Customer-owned/public policies are retained. Review that script against the project before applying it. Live Supabase behavior has not been tested from this workspace.

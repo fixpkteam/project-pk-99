@@ -1,8 +1,9 @@
 import 'package:fixpk/core/theme/app_theme.dart';
 import 'package:fixpk/core/widgets/components.dart';
 import 'package:fixpk/features/foundation/presentation/component_gallery.dart';
-import 'package:fixpk/features/foundation/presentation/foundation_pages.dart';
+import 'package:fixpk/features/services/presentation/services_pages.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -68,9 +69,11 @@ void main() {
   });
   testWidgets('empty service search can be cleared', (tester) async {
     await tester.pumpWidget(
-      MaterialApp(
-        theme: FixPkTheme.light,
-        home: const Scaffold(body: ServicesPage()),
+      ProviderScope(
+        child: MaterialApp(
+          theme: FixPkTheme.light,
+          home: const Scaffold(body: ServicesPage()),
+        ),
       ),
     );
     await tester.enterText(find.byType(TextField), 'not-a-service');

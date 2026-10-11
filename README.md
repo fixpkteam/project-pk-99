@@ -6,13 +6,19 @@ Flutter customer-app foundation for Android and iOS, with a web target for devel
 
 - Flutter **3.47.7**, bundled Dart **3.13.5**, exact direct dependency pins and a resolved lockfile.
 - Feature-based structure, Riverpod dependency injection and `go_router` indexed navigation.
-- Home, Services, Requests, Projects and Account shell. Service search and branch state work locally.
+- Home, searchable service catalogue, service categories/details, guest browsing, and an account entry point.
+- Supabase Auth sign-in/sign-up, password-reset email request, profile editing, and sign-out in connected mode.
+- Published service categories and services load from Supabase; preview mode remains credential-free.
+- Saved address management and a dynamic five-step request form with answers, schedule preferences, and private attachment uploads.
+- Customer request history/details, site-survey requests, appointment summaries, quote line items, and secure quote decisions through PostgreSQL functions.
+- Published product and project catalogues with media/specifications, and customer-safe job progress tracking. Product/project enquiry context carries into the service request notes.
+- Customer notifications, support tickets and FAQ, review submission, preferences, legal information, and staff queues for requests/jobs/support/review moderation.
 - FixPK blue/navy/white theme and interactive component gallery at `/components`.
 - Startup loading/failure/retry, unknown-route recovery, configuration validation and event-only logging.
 - Preferences and secure-storage interfaces/adapters, ready for future feature integration.
 - Unit/widget tests, CI configuration and architectural/API planning documents.
 
-The app supports a local foundation preview and Supabase client initialization. Customer authentication, requests, uploads, and production data flows are not implemented. Gallery examples are explicitly samples.
+The app supports a local preview and connected Supabase mode. Delivery 3 implements the customer request-to-quote journey, and the user reports running the supplemental survey/quote command SQL. Delivery 4 implements job progress, products, and projects. Delivery 5 implements customer care and an in-app staff console. Live backend verification still depends on a connected environment. Gallery examples are explicitly samples.
 
 ## Run
 
@@ -55,6 +61,8 @@ flutter build ios --simulator --debug --dart-define-from-file=config/development
 
 `tool/check.sh` performs version, dependency-lock, formatting, analysis, unit/widget tests and web-build checks. Native builds require their platform toolchains. CI includes Android and iOS simulator build jobs, but a local workflow file does not mean hosted CI has run.
 
+For a read-only health check of the configured connected development project, run `python3 tool/supabase_smoke_check.py --config config/development.json`. It checks Auth settings and public categories/services/FAQ only; it does not verify private customer data access, staff role policies, or production release credentials.
+
 ## Structure
 
 | Path | Responsibility |
@@ -66,7 +74,14 @@ flutter build ios --simulator --debug --dart-define-from-file=config/development
 | `lib/core/storage/` | Preference and secret adapters |
 | `lib/core/logging/` | Enumerated, payload-free events |
 | `lib/features/foundation/presentation/` | Preview shell and component gallery |
+| `lib/features/auth/` | Supabase Auth and customer profile screens/data access |
+| `lib/features/services/` | Service catalogue models, queries and screens |
+| `lib/features/requests/` | Saved addresses, request submission/history, surveys and quotations |
+| `lib/features/catalogue/` | Published product/project catalogue reads, media, specifications and screens |
+| `lib/features/jobs/` | Customer-safe job progress and staff job status operations |
+| `lib/features/care/` | Notifications, support, FAQs, preferences, reviews, legal information and staff queues |
 | `test/` | Config, navigation, responsive controls and forms |
+| `supabase/sql/` | Customer-safe survey and quote command functions to apply after the core schema |
 | `docs/` | Decisions, contracts, migration plan and validation record |
 
 ## Brand and release limitations
@@ -75,8 +90,8 @@ The app uses plain `FixPK` text as its title, not a recreated logo. Place an app
 
 Initial native identifier is `com.fixpk.fixpk`; confirm ownership and environment-specific identifiers before release. Android minimum API and iOS deployment target are documented in `docs/ENVIRONMENTS.md`.
 
-Read `docs/PHASE_1_STATUS.md` for checks actually performed and remaining acceptance gates.
+Read `docs/ROADMAP.md` for the combined delivery plan, `docs/COMBINED_DELIVERY_5_STATUS.md` for customer care delivery, `docs/COMBINED_DELIVERY_6_STATUS.md` for release readiness, and `docs/PHASE_1_STATUS.md` for the foundation record.
 
 ## Verified handoff
 
-Phase 1 static analysis, all 13 unit/widget tests and the web release build passed on 11 October 2026. The Supabase initialization integration is covered by widget tests and will run through hosted CI when pushed. Android/iOS device storage checks remain outstanding. Review phone renders in `docs/previews/home.png` and `docs/previews/services.png`; reproduction instructions are in the validation record.
+Combined Delivery 5 validation and the limited connected Supabase smoke check are recorded in `docs/COMBINED_DELIVERY_5_STATUS.md` and `docs/COMBINED_DELIVERY_6_STATUS.md`. Customer/staff RLS and Android/iOS device checks remain outstanding. Review phone renders in `docs/previews/home.png` and `docs/previews/services.png`; reproduction instructions are in the validation records.

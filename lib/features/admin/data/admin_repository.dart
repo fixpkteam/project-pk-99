@@ -331,6 +331,10 @@ class AdminRepository {
         'Choose a parent record and a non-empty image.',
       );
     }
+    final extension = fileName.split('.').last.toLowerCase();
+    if (!const {'jpg', 'jpeg', 'png', 'webp'}.contains(extension)) {
+      throw const FormatException('Choose a JPG, PNG, or WebP image.');
+    }
     if (bytes.length > 8 * 1024 * 1024) {
       throw const FormatException('Choose an image smaller than 8 MB.');
     }
@@ -393,12 +397,12 @@ class AdminRepository {
       body: {'action': 'list', 'page': page, 'perPage': 50},
     );
     final body = result.data;
-    if (body is! Map || body['users'] is! List) {
+    if (body is! Map<String, dynamic> || body['users'] is! List) {
       throw const FormatException('Admin user response is invalid.');
     }
     return (body['users'] as List)
-        .whereType<Map>()
-        .map((row) => AdminUserRecord.fromJson(Map<String, dynamic>.from(row)))
+        .whereType<Map<String, dynamic>>()
+        .map(AdminUserRecord.fromJson)
         .toList(growable: false);
   }
 

@@ -56,7 +56,7 @@ class AdminGate extends ConsumerWidget {
           ),
           data: (items) => items.any((item) => item.role == 'admin')
               ? child
-              : const Scaffold(
+              : Scaffold(
                   appBar: AppBar(title: Text('FixPK admin')),
                   body: AppStatePanel(
                     title: 'Admin access required',
@@ -208,12 +208,17 @@ class AdminContentPage extends ConsumerWidget {
       AdminGate(child: _AdminContentList(tableKey: tableKey));
 }
 
-class _AdminContentList extends ConsumerWidget {
+class _AdminContentList extends ConsumerStatefulWidget {
   const _AdminContentList({required this.tableKey});
   final String tableKey;
-
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AdminContentList> createState() => _AdminContentListState();
+}
+
+class _AdminContentListState extends ConsumerState<_AdminContentList> {
+  @override
+  Widget build(BuildContext context) {
+    final tableKey = widget.tableKey;
     final table = adminTableByKey(tableKey);
     if (table == null) {
       return Scaffold(
@@ -302,10 +307,12 @@ class _AdminContentList extends ConsumerWidget {
                           PopupMenuButton<String>(
                             tooltip: 'Record actions',
                             onSelected: (action) {
-                              if (action == 'edit')
+                              if (action == 'edit') {
                                 _editRow(context, ref, table, row);
-                              if (action == 'delete')
+                              }
+                              if (action == 'delete') {
                                 _deleteRow(context, ref, table, row);
+                              }
                             },
                             itemBuilder: (_) => const [
                               PopupMenuItem(value: 'edit', child: Text('Edit')),
@@ -336,12 +343,14 @@ class _AdminContentList extends ConsumerWidget {
       'value',
     ]) {
       final value = row[key];
-      if (value != null && '$value'.trim().isNotEmpty && key != titleField)
+      if (value != null && '$value'.trim().isNotEmpty && key != titleField) {
         return '$value';
+      }
     }
     final state = row['is_published'] ?? row['is_active'];
-    if (state is bool)
+    if (state is bool) {
       return state ? 'Visible to customers' : 'Hidden from customers';
+    }
     return 'ID ${row['id'] ?? '—'}';
   }
 
@@ -402,32 +411,30 @@ class _AdminContentList extends ConsumerWidget {
           // An unreferenced upload can be cleaned up later.
         }
       }
-      if (context.mounted)
+      if (context.mounted) {
         _showToast(
           context,
           'Could not save this record. Check its fields and admin table policies.',
         );
+      }
     }
   }
 
   Future<String?> _uploadCatalogueImage(String tableKey, String ownerId) async {
-    final selection = await FilePicker.pickFiles(
-      type: FileType.image,
-      allowedExtensions: const ['jpg', 'jpeg', 'png', 'webp'],
-      withData: true,
-      allowMultiple: false,
-    );
-    if (selection == null || selection.files.isEmpty) return null;
-    final file = selection.files.first;
-    final bytes = file.bytes;
-    if (bytes == null)
+    final selection = await FilePicker.pickFile(type: FileType.image);
+    if (selection == null) {
+      return null;
+    }
+    final bytes = await selection.readAsBytes();
+    if (bytes.isEmpty) {
       throw const FormatException('The selected image could not be read.');
+    }
     return ref
         .read(adminRepositoryProvider)
         .uploadCatalogueImage(
           tableKey: tableKey,
           ownerId: ownerId,
-          fileName: file.name,
+          fileName: selection.name,
           bytes: bytes,
         );
   }
@@ -461,18 +468,21 @@ class _AdminContentList extends ConsumerWidget {
     if (confirmed != true || !context.mounted) return;
     try {
       final id = '${row['id'] ?? ''}';
-      if (id.isEmpty) throw const FormatException('This record has no ID.');
+      if (id.isEmpty) {
+        throw const FormatException('This record has no ID.');
+      }
       await ref
           .read(adminRepositoryProvider)
           .deleteRow(table, id, objectPath: row['object_path']?.toString());
       ref.invalidate(adminContentRowsProvider(table.key));
       if (context.mounted) _showToast(context, 'Record deleted.');
     } on Object {
-      if (context.mounted)
+      if (context.mounted) {
         _showToast(
           context,
           'Could not delete this record. Check whether it is still in use.',
         );
+      }
     }
   }
 }
@@ -713,11 +723,12 @@ class _AdminRecordEditorState extends ConsumerState<_AdminRecordEditor> {
         _controllers[field]?.text = path;
       }
     } on Object {
-      if (mounted)
+      if (mounted) {
         _showToast(
           context,
           'Image upload failed. Check file size and storage policies.',
         );
+      }
     } finally {
       if (mounted) setState(() => _uploading = false);
     }
@@ -777,8 +788,9 @@ class _AdminRecordEditorState extends ConsumerState<_AdminRecordEditor> {
       }
     }
     result.addAll(_switches);
-    if (_uploadedPaths.isNotEmpty)
+    if (_uploadedPaths.isNotEmpty) {
       result['_admin_uploaded_paths'] = List<String>.from(_uploadedPaths);
+    }
     if (widget.row == null) {
       final label = result[widget.table.titleField];
       if (result.containsKey('slug') &&
@@ -953,13 +965,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
       for (var page = 1; page <= _lastPage; page++) {
         ref.invalidate(adminUserPageProvider(page));
       }
-      if (context.mounted) _showToast(context, 'Staff access updated.');
+      if (context.mounted) {
+        _showToast(context, 'Staff access updated.');
+      }
     } on Object {
-      if (context.mounted)
+      if (context.mounted) {
         _showToast(
           context,
           'Could not update roles. Check the Edge Function and admin role.',
         );
+      }
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -1001,14 +1016,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
       for (var page = 1; page <= _lastPage; page++) {
         ref.invalidate(adminUserPageProvider(page));
       }
-      if (context.mounted)
+      if (context.mounted) {
         _showToast(
           context,
           suspend ? 'Sign-in suspended.' : 'Sign-in restored.',
         );
+      }
     } on Object {
-      if (context.mounted)
+      if (context.mounted) {
         _showToast(context, 'Could not change sign-in access.');
+      }
     } finally {
       if (mounted) setState(() => _working = false);
     }
@@ -1124,10 +1141,11 @@ class _RoleEditorState extends State<_RoleEditor> {
             onChanged: widget.isSelf && entry.key == 'admin'
                 ? null
                 : (selected) => setState(() {
-                    if (selected == true)
+                    if (selected == true) {
                       _roles.add(entry.key);
-                    else
+                    } else {
                       _roles.remove(entry.key);
+                    }
                   }),
           ),
       ],

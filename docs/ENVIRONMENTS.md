@@ -20,7 +20,7 @@ The supplied Supabase project URL is configured for local development. This inte
 - The web target supports reviewing the foundation. It is not a replacement for the separate admin or native release validation.
 - No camera/location/notification permission is requested in Phase 1.
 - Android internet permission is declared for future network features; no network is initialized by the preview.
-- Default launcher icons are temporary until approved logo assets arrive.
+- The supplied FixPK artwork now provides Android, iOS and web/PWA launcher icons. The Android application ID and iOS bundle ID remain provisional.
 
 Build-time environment isolation exists. Separate native flavours/schemes, unique install IDs, associated domains, signing identities and production provider configuration are release prerequisites and are not claimed as complete here.
 

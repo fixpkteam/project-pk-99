@@ -86,11 +86,11 @@ For a read-only health check of the configured connected development project, ru
 
 ## Brand and release limitations
 
-The app uses plain `FixPK` text as its title, not a recreated logo. Place an approved master logo in `assets/brand/` and register it when supplied. Default Flutter launcher icons are development placeholders. Screenshot product prices, example reviews and photographs have not been imported as real data. System fonts are used pending the approved typeface asset.
+The app uses the supplied FixPK logo as its launcher identity. The polished square app icon is stored at `assets/brand/fixpk-app-icon.png` and applied to Android, iOS and web/PWA launcher assets. Screenshot product prices, example reviews and photographs have not been imported as real data. System fonts are used pending the approved typeface asset.
 
 Initial native identifier is `com.fixpk.fixpk`; confirm ownership and environment-specific identifiers before release. Android minimum API and iOS deployment target are documented in `docs/ENVIRONMENTS.md`.
 
-Read `docs/ROADMAP.md` for the combined delivery plan, `docs/COMBINED_DELIVERY_5_STATUS.md` for customer care delivery, `docs/COMBINED_DELIVERY_6_STATUS.md` for release readiness, and `docs/PHASE_1_STATUS.md` for the foundation record.
+Read `docs/ROADMAP.md` for the combined delivery plan, `docs/COMBINED_DELIVERY_5_STATUS.md` for customer care delivery, `docs/COMBINED_DELIVERY_6_STATUS.md` for release readiness, and `docs/PHASE_1_STATUS.md` for the foundation record. The launcher icon update is recorded in `docs/COMBINED_DELIVERY_6_STATUS.md`.
 
 ## Verified handoff
 

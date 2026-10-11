@@ -38,7 +38,7 @@
 
 1. **Supabase authorization:** the user confirms a staff role is added. Verify the role-scoped policies are applied and test each staff role plus owner/other-customer access with separate authenticated accounts. The public smoke script does not test RLS.
 2. **Legal:** replace draft privacy/terms wording with FixPK-approved policies and support contact details.
-3. **Brand/store identity:** provide the approved logo/app icon and confirm unique Android application ID and iOS bundle ID ownership.
+3. **Store identity:** confirm unique Android application ID and iOS bundle ID ownership; the FixPK launcher icon is now supplied.
 4. **Signing:** configure Android upload/release key and Apple signing/team/App Store Connect access through protected CI secrets; never add signing material to Git.
 5. **Monitoring and notifications:** configure the chosen crash reporting and push delivery providers, privacy settings, platform credentials, and device-token backend. The app currently has in-app notification records only.
 6. **Release environments:** populate protected staging/production public Supabase URL and publishable key values; review Supabase Auth redirect URLs and production RLS/storage policies.
@@ -58,3 +58,8 @@ The smoke check sends only GET requests to Auth settings and public catalogue/FA
 ## Release decision
 
 Do not label an artifact as production-ready until the authorization matrix, approved legal copy, production identifiers/signing, provider setup, native-device acceptance, and crash monitoring are complete. Keep the existing CI debug APK as an internal test artifact.
+
+
+## App icon update — 11 October 2026
+
+The supplied FixPK logo has been adapted into a square launcher icon, preserving the navy roof and FIX lettering with blue PK. Android mipmaps, the iOS AppIcon catalog, browser favicon, and web/PWA icons (including padded maskable variants) now use the artwork. The 1024 × 1024 source is `assets/brand/fixpk-app-icon.png`. Device/store review and app identifier ownership remain open.

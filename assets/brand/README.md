@@ -1,5 +1,5 @@
-# Approved FixPK logo asset slot
+# FixPK app icon
 
-Supply the original transparent PNG or SVG logo and any approved reverse/light variant. Preserve geometry, colour and proportions. Add the asset to pubspec only when available. The current plain application title is not a substitute logo.
+`fixpk-app-icon.png` is the approved app-icon artwork generated from the supplied FixPK logo. It preserves the navy roof and FIX lettering with blue PK, and omits the tagline and service pictograms so the brand remains readable at launcher size.
 
-The supplied multi-screen preview is a design reference, not a production asset bundle. Do not crop its UI or redraw its logo. Launcher icon generation and brand approval are outstanding.
+The artwork is applied to Android launcher mipmaps, the iOS AppIcon asset catalog, and the web/PWA icons. PWA maskable variants use additional internal padding for adaptive icon shapes. Keep the source artwork square and update platform exports from it when the approved brand artwork changes.

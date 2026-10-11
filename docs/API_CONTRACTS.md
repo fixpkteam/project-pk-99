@@ -1,6 +1,6 @@
 # Backend contracts — design only
 
-No endpoint is deployed in Phase 1. Supabase SDK is pinned for later integration but is not initialized.
+No application endpoint or table is deployed by this client integration. The pinned Supabase Flutter SDK initializes during connected startup and provides the client for later feature repositories. No database query is made until a feature calls a repository.
 
 ## Query contracts
 

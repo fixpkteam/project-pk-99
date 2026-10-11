@@ -20,7 +20,7 @@ The foundation catalogue is a small, explicitly labelled local presentation fixt
 
 Riverpod owns root configuration, bootstrap, logger, storage adapters and router lifecycle. Future controllers expose explicit loading/data/failure state. Use provider overrides for tests. Do not add a second DI container. Use widget-local state for short-lived gallery interactions.
 
-Configuration errors are not network errors. Startup must fail safely, show a retry action and never print configuration values. Live connections are not initialized during Phase 1.
+Configuration errors are not network errors. Startup must fail safely, show a retry action and never print configuration values. Connected builds initialize Supabase during bootstrap before exposing the client provider. A publishable key is public and all data access still requires server-side RLS and storage policies.
 
 ## ADR-004 — navigation
 
@@ -32,7 +32,7 @@ Verified routes: `/`, `/home`, `/services`, `/requests`, `/projects`, `/account`
 
 Only public mobile configuration can use Dart defines. A mobile binary is inspectable. No service-role key, FCM server secret, SMS password or database password can be embedded. Connected mode accepts only the explicit `sb_publishable_` key form and HTTPS origins. Backend RLS remains mandatory; a publishable key is not an authorization boundary.
 
-Phase 1 uses development preview mode by default. Staging and production reject preview. Live mode is gated even with syntactically valid credentials. This prevents an incomplete app appearing operational.
+Development preview remains the default example. Staging and production reject preview. Connected mode accepts only HTTPS origins and the explicit `sb_publishable_` key form. Keep actual environment files out of Git; configure all backend access with least privilege and RLS.
 
 ## ADR-006 — persistence and diagnostics
 

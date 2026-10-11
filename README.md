@@ -1,4 +1,4 @@
-# FixPK — Phase 1 foundation
+# FixPK — Flutter application
 
 Flutter customer-app foundation for Android and iOS, with a web target for development review.
 
@@ -12,7 +12,7 @@ Flutter customer-app foundation for Android and iOS, with a web target for devel
 - Preferences and secure-storage interfaces/adapters, ready for future feature integration.
 - Unit/widget tests, CI configuration and architectural/API planning documents.
 
-This is a clearly labelled foundation preview. It does not authenticate, submit requests, upload files, create backend resources or contain customer data. Gallery examples are explicitly samples.
+The app supports a local foundation preview and Supabase client initialization. Customer authentication, requests, uploads, and production data flows are not implemented. Gallery examples are explicitly samples.
 
 ## Run
 
@@ -30,7 +30,10 @@ CI uses this source-tag route and verifies commit `abaf9c523780a608bd46686fd5e53
 
 ```sh
 flutter pub get --enforce-lockfile
-flutter run --dart-define-from-file=config/development.example.json
+cp config/development.example.json config/development.json
+# Edit config/development.json: set FOUNDATION_PREVIEW=false and supply your
+# Supabase project URL and publishable key to connect the Flutter client.
+flutter run --dart-define-from-file=config/development.json
 ```
 
 For a browser review, select an installed Chrome device:
@@ -39,7 +42,7 @@ For a browser review, select an installed Chrome device:
 flutter run -d chrome --dart-define-from-file=config/development.example.json
 ```
 
-Do not use a development preview as a production release. Staging/production examples intentionally fail until configured; connected bootstrap is deliberately gated until Phase 2.
+The development example remains a credential-free preview. Do not use it as a production release. Staging/production examples intentionally fail until configured. `config/*.json` is ignored by Git; never place server secrets in build-time config.
 
 ## Validate
 
@@ -76,4 +79,4 @@ Read `docs/PHASE_1_STATUS.md` for checks actually performed and remaining accept
 
 ## Verified handoff
 
-Static analysis, all 13 unit/widget tests and the web release build passed on 11 October 2026. Android/iOS builds and device storage checks remain outstanding. Review phone renders in `docs/previews/home.png` and `docs/previews/services.png`; reproduction instructions are in the validation record. Phase 2 is not implemented.
+Phase 1 static analysis, all 13 unit/widget tests and the web release build passed on 11 October 2026. The Supabase initialization integration is covered by widget tests and will run through hosted CI when pushed. Android/iOS device storage checks remain outstanding. Review phone renders in `docs/previews/home.png` and `docs/previews/services.png`; reproduction instructions are in the validation record.

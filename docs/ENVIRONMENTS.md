@@ -2,15 +2,15 @@
 
 | Environment | Preview | Backend | Purpose |
 |---|---|---|---|
-| Development | true by default | None | Phase 1 local UI and tests |
-| Staging | false | Separate future project | Integration and UAT |
-| Production | false | Separate future project | Approved live service |
+| Development | true in the example | Connected when configured | Local UI preview or Supabase development project |
+| Staging | false | Separate Supabase project | Integration and UAT |
+| Production | false | Separate Supabase project | Approved live service |
 
-Copy the appropriate example to an ignored local JSON file. Use `--dart-define-from-file` consistently for run/build. Empty staging and production files fail validation. Even configured live environments show the startup safety gate until connected bootstrap is implemented in Phase 2.
+Copy the appropriate example to an ignored local JSON file. For development, set `FOUNDATION_PREVIEW` to `false` and provide `SUPABASE_URL` plus `SUPABASE_PUBLISHABLE_KEY`. Use `--dart-define-from-file` consistently for run/build. Empty staging and production files fail validation. Connected startup initializes the official Flutter client and restores its local auth session. It does not create database resources or query application tables.
 
-Keys: `APP_ENV`, `FOUNDATION_PREVIEW`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`. Never put backend secrets in these files. Public keys still require database/storage RLS. Flutter does not make define values secret.
+Keys: `APP_ENV`, `FOUNDATION_PREVIEW`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`. Never put backend secrets in these files. The publishable key is included in the compiled app and is not an authorization boundary; database/storage access requires correct RLS and storage policies. Flutter does not make define values secret.
 
-No cloud accounts, databases, buckets, SMS providers, maps credentials, Firebase projects or app store records have been created. No existing external project is linked.
+The supplied Supabase project URL is configured for local development. This integration does not create or alter database tables, buckets, Auth settings, SMS providers, maps credentials, Firebase projects or app store records.
 
 ## Platform baseline
 

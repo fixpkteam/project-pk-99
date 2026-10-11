@@ -71,9 +71,11 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Engineering Solutions.\nBuilt to Last.'), findsOneWidget);
   });
-  testWidgets('connected mode remains closed during foundation phase', (
+  testWidgets('connected mode initializes Supabase before showing the app', (
     tester,
   ) async {
+    var initializedUrl = '';
+    var initializedKey = '';
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -85,11 +87,17 @@ void main() {
               supabasePublishableKey: 'sb_publishable_test',
             ),
           ),
+          backendInitializerProvider.overrideWithValue((config) async {
+            initializedUrl = config.supabaseUrl;
+            initializedKey = config.supabasePublishableKey;
+          }),
         ],
         child: const FixPkApp(),
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('FixPK could not start'), findsOneWidget);
+    expect(find.text('Engineering Solutions.\nBuilt to Last.'), findsOneWidget);
+    expect(initializedUrl, 'https://example.supabase.co');
+    expect(initializedKey, 'sb_publishable_test');
   });
 }

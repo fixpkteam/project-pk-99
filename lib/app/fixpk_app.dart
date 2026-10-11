@@ -39,7 +39,7 @@ class FixPkApp extends ConsumerWidget {
             child: SingleChildScrollView(
               child: AppStatePanel(
                 title: 'FixPK could not start',
-                message: 'This build is not ready to connect. Try again or use the development preview configuration.',
+                message: 'Check the connection settings and try again.',
                 icon: Icons.cloud_off_outlined,
                 isError: true,
                 actionLabel: 'Retry',

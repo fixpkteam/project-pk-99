@@ -1,0 +1,12 @@
+name: Set up pinned Flutter
+description: Install the verified Flutter release source tag and its bundled Dart SDK.
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        git clone --depth 1 --branch 3.47.7 https://github.com/flutter/flutter.git "$RUNNER_TEMP/flutter"
+        test "$(git -C "$RUNNER_TEMP/flutter" rev-parse HEAD)" = "abaf9c523780a608bd46686fd5e53740a07077f8"
+        echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+    - shell: bash
+      run: flutter --version

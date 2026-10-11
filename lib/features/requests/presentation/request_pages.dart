@@ -399,8 +399,9 @@ class RequestDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    if (ref.watch(configProvider).preview)
+    if (ref.watch(configProvider).preview) {
       return _PreviewRequestDetail(requestId: requestId);
+    }
     final user = ref.watch(authUserProvider).value;
     if (user == null) {
       return Scaffold(

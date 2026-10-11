@@ -3,9 +3,11 @@ import 'package:fixpk/app/fixpk_app.dart';
 import 'package:fixpk/app/providers.dart';
 import 'package:fixpk/core/config/app_config.dart';
 import 'package:fixpk/core/theme/app_theme.dart';
+import 'package:fixpk/features/care/data/care_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
   testWidgets('tabs preserve service search and navigate without a backend', (
@@ -13,7 +15,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const ProviderScope(child: FixPkApp()));
     await tester.pumpAndSettle();
-    expect(find.text('Engineering Solutions.\nBuilt to Last.'), findsOneWidget);
+    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
     await tester.tap(find.byType(NavigationDestination).at(1));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'CCTV');
@@ -22,7 +24,7 @@ void main() {
     expect(find.text('Solar Solutions'), findsNothing);
     await tester.tap(find.byType(NavigationDestination).at(4));
     await tester.pumpAndSettle();
-    expect(find.text('Your FixPK account'), findsOneWidget);
+    expect(find.text('Welcome to FixPK'), findsOneWidget);
     await tester.tap(find.byType(NavigationDestination).at(1));
     await tester.pumpAndSettle();
     expect(find.text('CCTV'), findsOneWidget);
@@ -39,7 +41,7 @@ void main() {
     expect(find.text('This page is unavailable'), findsOneWidget);
     await tester.tap(find.text('Go home'));
     await tester.pumpAndSettle();
-    expect(find.text('Engineering Solutions.\nBuilt to Last.'), findsOneWidget);
+    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
   });
 
   testWidgets('product and project routes have useful preview states', (
@@ -50,16 +52,92 @@ void main() {
 
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Browse products'));
-    await tester.tap(find.text('Browse products'));
+    await tester.ensureVisible(find.text('Products'));
+    await tester.tap(find.text('Products'));
     await tester.pumpAndSettle();
-    expect(find.text('Connect to see the live catalogue'), findsOneWidget);
+    expect(find.text('Products & solutions'), findsOneWidget);
+    expect(find.text('Solar Water Heater'), findsOneWidget);
 
     await tester.pageBack();
     await tester.pumpAndSettle();
     await tester.tap(find.byType(NavigationDestination).at(3));
     await tester.pumpAndSettle();
-    expect(find.text('Connect to see FixPK projects'), findsOneWidget);
+    expect(find.text('Selected projects'), findsOneWidget);
+    expect(find.text('Rooftop Solar Installation'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('admin routes deny guests until a staff admin role is verified', (
+    tester,
+  ) async {
+    final router = createRouter(initialLocation: '/admin');
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: FixPkTheme.light,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Admin sign-in required'), findsOneWidget);
+    expect(find.text('Sign in'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('admin routes deny a signed-in customer without the admin role', (
+    tester,
+  ) async {
+    final router = createRouter(initialLocation: '/admin');
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authUserProvider.overrideWith((ref) => Stream.value(_testUser)),
+          staffRoleListProvider.overrideWith(
+            (ref, userId) async => [
+              const StaffRoleRecord(userId: 'customer-1', role: 'support'),
+            ],
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: FixPkTheme.light,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Admin access required'), findsOneWidget);
+    expect(find.text('FixPK control center'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('verified admins can open the content management panel', (
+    tester,
+  ) async {
+    final router = createRouter(initialLocation: '/admin');
+    addTearDown(router.dispose);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          authUserProvider.overrideWith((ref) => Stream.value(_testUser)),
+          staffRoleListProvider.overrideWith(
+            (ref, userId) async => [
+              const StaffRoleRecord(userId: 'admin-1', role: 'admin'),
+            ],
+          ),
+        ],
+        child: MaterialApp.router(
+          theme: FixPkTheme.light,
+          routerConfig: router,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('FixPK control center'), findsOneWidget);
+    expect(find.text('Users and staff access'), findsOneWidget);
+    expect(find.text('Products'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -91,7 +169,7 @@ void main() {
     expect(attempts, greaterThan(0));
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
-    expect(find.text('Engineering Solutions.\nBuilt to Last.'), findsOneWidget);
+    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
   });
   testWidgets('connected mode initializes Supabase before showing the app', (
     tester,
@@ -118,7 +196,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Engineering Solutions.\nBuilt to Last.'), findsOneWidget);
+    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
     expect(initializedUrl, 'https://example.supabase.co');
     expect(initializedKey, 'sb_publishable_test');
   });
@@ -151,3 +229,12 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 }
+
+final _testUser = User(
+  id: 'admin-1',
+  appMetadata: const {},
+  userMetadata: const {'full_name': 'Test Admin'},
+  aud: 'authenticated',
+  createdAt: '2026-10-11T12:00:00Z',
+  email: 'admin@example.test',
+);

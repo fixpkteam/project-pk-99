@@ -17,7 +17,7 @@ The supplied Supabase project URL is configured for local development. This inte
 - Android target/compile SDK follows the pinned Flutter template; minimum API 24. JDK 17 required.
 - iOS minimum deployment target 15.0. Native validation needs macOS, compatible Xcode and CocoaPods.
 - Package/bundle identifier `com.fixpk.fixpk` is provisional and unregistered by this work.
-- The web target supports reviewing the foundation. It is not a replacement for the separate admin or native release validation.
+- The web target supports customer flows and the role-gated Flutter admin console. Native release validation still requires Android/iOS device testing.
 - No camera/location/notification permission is requested in Phase 1.
 - Android internet permission is declared for future network features; no network is initialized by the preview.
 - The supplied FixPK artwork now provides Android, iOS and web/PWA launcher icons. The Android application ID and iOS bundle ID remain provisional.

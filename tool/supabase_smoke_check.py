@@ -15,8 +15,18 @@ def check(label: str, url: str, headers: dict[str, str]) -> bool:
             status = response.status
     except HTTPError as error:
         status = error.code
-    except (URLError, TimeoutError, OSError):
-        print(f"FAIL {label}: request failed")
+    except URLError as error:
+        reason = error.reason
+        detail = (
+            reason.strerror
+            if isinstance(reason, OSError) and reason.strerror
+            else type(reason).__name__
+        )
+        print(f"FAIL {label}: network unavailable ({detail})")
+        return False
+    except (TimeoutError, OSError) as error:
+        detail = error.strerror if isinstance(error, OSError) and error.strerror else type(error).__name__
+        print(f"FAIL {label}: network unavailable ({detail})")
         return False
 
     passed = 200 <= status < 300
@@ -68,7 +78,8 @@ def main() -> int:
             common_headers,
         ),
     ]
-    return 0 if all(check(*item) for item in checks) else 1
+    results = [check(*item) for item in checks]
+    return 0 if all(results) else 1
 
 
 if __name__ == "__main__":

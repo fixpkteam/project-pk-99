@@ -15,6 +15,35 @@ jobs:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-flutter
       - run: bash tool/check.sh
+  supabase-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno lint supabase/functions/admin-user-management
+      - run: deno check supabase/functions/admin-user-management/index.ts
+  supabase-smoke:
+    if: ${{ vars.SUPABASE_URL != '' && vars.SUPABASE_PUBLISHABLE_KEY != '' }}
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create temporary connected check config
+        run: |
+          python3 - <<'PYCODE'
+          import json, os
+          with open('/tmp/fixpk-supabase-check.json', 'w', encoding='utf-8') as handle:
+              json.dump({
+                  'FOUNDATION_PREVIEW': 'false',
+                  'SUPABASE_URL': os.environ['SUPABASE_URL'],
+                  'SUPABASE_PUBLISHABLE_KEY': os.environ['SUPABASE_PUBLISHABLE_KEY'],
+              }, handle)
+          PYCODE
+      - run: python3 tool/supabase_smoke_check.py --config /tmp/fixpk-supabase-check.json
   android:
     runs-on: ubuntu-latest
     steps:
@@ -30,6 +59,25 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fixpk-debug-apk-${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Build connected Android package
+        if: ${{ vars.SUPABASE_URL != '' && vars.SUPABASE_PUBLISHABLE_KEY != '' }}
+        env:
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+        run: >-
+          flutter build apk --debug
+          --dart-define=APP_ENV=staging
+          --dart-define=FOUNDATION_PREVIEW=false
+          --dart-define=SUPABASE_URL=$SUPABASE_URL
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY
+      - name: Upload connected Android package
+        if: ${{ vars.SUPABASE_URL != '' && vars.SUPABASE_PUBLISHABLE_KEY != '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: fixpk-connected-apk-${{ github.run_number }}
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 14

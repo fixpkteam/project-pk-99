@@ -8,6 +8,8 @@ import '../features/foundation/presentation/foundation_pages.dart'
     show HomePage;
 import '../features/auth/presentation/auth_page.dart'
     show AccountPage, AuthPage;
+import '../features/admin/presentation/admin_pages.dart'
+    show AdminConsolePage, AdminContentPage, AdminUsersPage;
 import '../features/services/presentation/services_pages.dart'
     show ServiceDetailPage, ServicesPage;
 import '../features/catalogue/presentation/catalogue_pages.dart'
@@ -115,6 +117,19 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
     GoRoute(
       path: '/account/legal',
       builder: (context, state) => const LegalPage(),
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminConsolePage(),
+    ),
+    GoRoute(
+      path: '/admin/users',
+      builder: (context, state) => const AdminUsersPage(),
+    ),
+    GoRoute(
+      path: '/admin/table/:tableKey',
+      builder: (context, state) =>
+          AdminContentPage(tableKey: state.pathParameters['tableKey']!),
     ),
     GoRoute(
       path: '/staff',

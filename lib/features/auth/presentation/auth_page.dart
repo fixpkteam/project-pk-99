@@ -493,6 +493,20 @@ class AccountPage extends ConsumerWidget {
                             title: const Text('Legal and privacy'),
                             onTap: () => context.push('/account/legal'),
                           ),
+                          if (staffRoles.value?.any(
+                                (role) => role.role == 'admin',
+                              ) ==
+                              true)
+                            ListTile(
+                              leading: const Icon(
+                                Icons.dashboard_customize_outlined,
+                              ),
+                              title: const Text('Admin panel'),
+                              subtitle: const Text(
+                                'Manage FixPK content and users',
+                              ),
+                              onTap: () => context.push('/admin'),
+                            ),
                           if (staffRoles.value?.isNotEmpty == true)
                             ListTile(
                               leading: const Icon(

@@ -36,7 +36,7 @@ This plan groups the original 14 implementation phases into six larger deliverie
 
 **Combines:** Notifications/support, reviews/account completion, and admin workflows (original Phases 10–12).
 
-**Includes:** In-app notifications, support tickets/FAQ, eligible reviews, account hub/preferences/legal entry, and a role-gated staff console for request/job/support/review queues. Push delivery, support replies, and full content/quote administration require backend capabilities not present in the applied schema.
+**Includes:** In-app notifications, support tickets/FAQ, eligible reviews, account hub/preferences/legal entry, a role-gated staff console for request/job/support/review queues, and a Flutter admin console for user access and allowlisted service/catalogue/CMS CRUD. Quote preparation, support replies, outbound push delivery, and account deletion still require additional backend workflows.
 
 **Acceptance:** Customer care screens and scoped staff operations are implemented. Run `supabase/sql/staff_role_policies.sql` to replace the broad approved `staff_manage` policies on jobs, support tickets, and reviews before relying on role-specific write permissions. Live Supabase behavior remains unverified.
 

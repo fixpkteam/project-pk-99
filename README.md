@@ -13,12 +13,13 @@ Flutter customer-app foundation for Android and iOS, with a web target for devel
 - Customer request history/details, site-survey requests, appointment summaries, quote line items, and secure quote decisions through PostgreSQL functions.
 - Published product and project catalogues with media/specifications, and customer-safe job progress tracking. Product/project enquiry context carries into the service request notes.
 - Customer notifications, support tickets and FAQ, review submission, preferences, legal information, and staff queues for requests/jobs/support/review moderation.
+- Role-gated admin panel for allowlisted service/product/project/CMS CRUD, catalogue image uploads, user-role management and sign-in suspension.
 - FixPK blue/navy/white theme and interactive component gallery at `/components`.
 - Startup loading/failure/retry, unknown-route recovery, configuration validation and event-only logging.
 - Preferences and secure-storage interfaces/adapters, ready for future feature integration.
 - Unit/widget tests, CI configuration and architectural/API planning documents.
 
-The app supports a local preview and connected Supabase mode. Delivery 3 implements the customer request-to-quote journey, and the user reports running the supplemental survey/quote command SQL. Delivery 4 implements job progress, products, and projects. Delivery 5 implements customer care and an in-app staff console. Live backend verification still depends on a connected environment. Gallery examples are explicitly samples.
+The app supports a local preview and connected Supabase mode. Delivery 3 implements the customer request-to-quote journey, and the user reports running the supplemental survey/quote command SQL. Delivery 4 implements job progress, products, and projects. Delivery 5 implements customer care and staff operations. The admin console also requires `supabase/sql/admin_console_policies.sql` and the `admin-user-management` Edge Function; see [Admin and prelaunch verification](docs/ADMIN_AND_PRELAUNCH.md). Gallery examples are explicitly samples.
 
 ## Run
 
@@ -80,8 +81,9 @@ For a read-only health check of the configured connected development project, ru
 | `lib/features/catalogue/` | Published product/project catalogue reads, media, specifications and screens |
 | `lib/features/jobs/` | Customer-safe job progress and staff job status operations |
 | `lib/features/care/` | Notifications, support, FAQs, preferences, reviews, legal information and staff queues |
+| `lib/features/admin/` | Admin-only content management, catalogue media, user-role management and protected user access operations |
 | `test/` | Config, navigation, responsive controls and forms |
-| `supabase/sql/` | Customer-safe survey and quote command functions to apply after the core schema |
+| `supabase/sql/` | Customer-safe survey/quote commands plus staff/admin RLS policies to apply after the core schema |
 | `docs/` | Decisions, contracts, migration plan and validation record |
 
 ## Brand and release limitations

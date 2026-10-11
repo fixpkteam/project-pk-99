@@ -1,6 +1,6 @@
 # Combined Delivery 6 — quality and release readiness
 
-**Status:** Local release-readiness review in progress. A production release is not ready because account-specific, legal, store, and monitoring inputs remain unverified or unconfigured.
+**Status:** Local checks and hosted CI are complete. A production release is not ready because account-specific, legal, store, monitoring, and authenticated RLS checks remain unverified or unconfigured.
 
 ## Completed in this pass
 
@@ -9,6 +9,8 @@
 - Added `tool/supabase_smoke_check.py` as a repeatable read-only health check that does not print the project URL or publishable key.
 - Built the web release target in both credential-free preview mode and the connected development mode.
 - Confirmed CI defines Flutter analysis/tests/web build, Android debug APK artifact, and iOS simulator build jobs.
+- Published commit `6e2f4b7` to GitHub `main`; hosted run `38129484290` passed the checks, Android APK, and iOS simulator jobs.
+- GitHub Actions uploaded the internal test APK artifact `fixpk-debug-apk-3` (expires 25 October 2026).
 - Confirmed Android `allowBackup` is disabled.
 
 ## Verified local gates
@@ -22,10 +24,15 @@
 | Public service category/service reads | Pass, HTTP 200 |
 | Published FAQ read | Pass, HTTP 200 |
 | Connected development web build | Pass |
+| Hosted GitHub checks job | Pass |
+| Hosted Android APK build and artifact upload | Pass |
+| Hosted iOS simulator build | Pass |
+| Hosted GitHub CI for commit `6e2f4b7` | Pass: checks, Android APK, and iOS simulator jobs |
+| Android test artifact | `fixpk-debug-apk-3`; available from the Actions run until 25 October 2026 |
 | Connected authenticated customer journey | Not tested with a customer account |
 | Customer-to-customer isolation | Not tested with separate authenticated users |
 | Staff RLS writes and role separation | Not tested with an authenticated staff account |
-| Android/iOS device acceptance | Requires native toolchains/devices or hosted CI run against current source |
+| Android/iOS device acceptance | Not tested on physical devices; CI builds passed |
 
 ## Release blockers / owner inputs
 

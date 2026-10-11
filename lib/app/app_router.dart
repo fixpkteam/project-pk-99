@@ -207,18 +207,10 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      // Plain app title until the approved logo master is supplied.
-      title: Text(titles[shell.currentIndex]),
-      actions: [
-        IconButton(
-          tooltip: 'Open design components',
-          icon: const Icon(Icons.palette_outlined),
-          onPressed: () => context.push('/components'),
-        ),
-      ],
-    ),
-    body: SafeArea(top: false, child: shell),
+    appBar: shell.currentIndex == 0
+        ? null
+        : AppBar(title: Text(titles[shell.currentIndex])),
+    body: SafeArea(top: shell.currentIndex == 0, child: shell),
     bottomNavigationBar: NavigationBar(
       selectedIndex: shell.currentIndex,
       onDestinationSelected: (index) =>

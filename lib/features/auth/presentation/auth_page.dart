@@ -132,6 +132,17 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             child: ListView(
               padding: const EdgeInsets.all(24),
               children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Image.asset(
+                    'assets/brand/fixpk-app-icon.png',
+                    width: 58,
+                    height: 58,
+                    fit: BoxFit.cover,
+                    semanticLabel: 'FixPK',
+                  ),
+                ),
+                const SizedBox(height: 22),
                 Text(
                   creating ? 'Join FixPK' : 'Welcome back',
                   style: Theme.of(context).textTheme.headlineMedium,
@@ -249,11 +260,124 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 }
 
+class _AccountLinks extends StatelessWidget {
+  const _AccountLinks();
+  @override
+  Widget build(BuildContext context) => ContentCard(
+    child: Column(
+      children: [
+        _AccountLink(
+          icon: Icons.assignment_outlined,
+          label: 'My requests',
+          onTap: () => context.go('/requests'),
+        ),
+        _AccountLink(
+          icon: Icons.request_quote_outlined,
+          label: 'Quotations',
+          onTap: () => context.go('/requests'),
+        ),
+        _AccountLink(
+          icon: Icons.location_on_outlined,
+          label: 'Saved addresses',
+          onTap: () => context.push('/account/addresses'),
+        ),
+        _AccountLink(
+          icon: Icons.star_outline,
+          label: 'My reviews',
+          onTap: () => context.push('/account/reviews'),
+        ),
+        _AccountLink(
+          icon: Icons.notifications_none,
+          label: 'Notifications',
+          onTap: () => context.push('/account/notifications'),
+        ),
+        _AccountLink(
+          icon: Icons.support_agent_outlined,
+          label: 'Help & support',
+          onTap: () => context.push('/account/support'),
+        ),
+        _AccountLink(
+          icon: Icons.policy_outlined,
+          label: 'Legal and privacy',
+          onTap: () => context.push('/account/legal'),
+        ),
+      ],
+    ),
+  );
+}
+
+class _AccountLink extends StatelessWidget {
+  const _AccountLink({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) => ListTile(
+    contentPadding: EdgeInsets.zero,
+    leading: Icon(icon, color: const Color(0xFF006BC7)),
+    title: Text(label),
+    trailing: const Icon(Icons.chevron_right),
+    onTap: onTap,
+  );
+}
+
 class AccountPage extends ConsumerWidget {
   const AccountPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(configProvider).preview) {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 720),
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(16, 18, 16, 32),
+            children: [
+              Center(
+                child: Column(
+                  children: [
+                    const CircleAvatar(
+                      radius: 38,
+                      backgroundColor: Color(0xFFEFF8FF),
+                      child: Icon(
+                        Icons.person_outline,
+                        size: 38,
+                        color: Color(0xFF006BC7),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      'Welcome to FixPK',
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('Sign in to manage your services'),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              AppButton(
+                label: 'Sign in',
+                onPressed: () => context.push('/sign-in'),
+              ),
+              const SizedBox(height: 8),
+              AppButton(
+                label: 'Create account',
+                kind: ActionKind.outline,
+                onPressed: () => context.push('/sign-up'),
+              ),
+              const SizedBox(height: 20),
+              const _AccountLinks(),
+            ],
+          ),
+        ),
+      );
+    }
     final userState = ref.watch(authUserProvider);
     return Align(
       alignment: Alignment.topCenter,

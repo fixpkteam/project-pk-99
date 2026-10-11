@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/widgets/components.dart';
-import '../../foundation/presentation/foundation_pages.dart' show PageBody;
+import '../../../core/theme/app_theme.dart';
 import '../data/catalogue_repository.dart';
 
 String _money(num? amount, String currency) {
@@ -71,12 +71,7 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
   @override
   Widget build(BuildContext context) {
     if (ref.watch(configProvider).preview) {
-      return _previewPage(
-        context,
-        title: 'Products',
-        message: 'Connect the FixPK catalogue to browse verified products and request current pricing.',
-        icon: Icons.inventory_2_outlined,
-      );
+      return _PreviewProducts(enquiryContext: widget.enquiryContext);
     }
     final catalogue = ref.watch(productCatalogueProvider);
     final query = _query.trim().toLowerCase();
@@ -260,13 +255,7 @@ class ProductDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(configProvider).preview) {
-      return _previewPage(
-        context,
-        title: 'Product details',
-        message:
-            'Connect Supabase to view the live product and specifications.',
-        icon: Icons.inventory_2_outlined,
-      );
+      return _PreviewProductDetail(enquiryContext: enquiryContext);
     }
     final catalogue = ref.watch(productCatalogueProvider);
     return Scaffold(
@@ -442,18 +431,7 @@ class ProjectsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(configProvider).preview) {
-      return PageBody(
-        children: [
-          AppStatePanel(
-            title: 'Connect to see FixPK projects',
-            message:
-                'Connect the FixPK project catalogue to browse verified work.',
-            icon: Icons.apartment_outlined,
-            actionLabel: 'Browse services',
-            onAction: () => context.go('/services'),
-          ),
-        ],
-      );
+      return _PreviewProjects(enquiryContext: enquiryContext);
     }
     final projects = ref.watch(projectCatalogueProvider);
     return SafeArea(
@@ -556,12 +534,7 @@ class ProjectDetailPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (ref.watch(configProvider).preview) {
-      return _previewPage(
-        context,
-        title: 'Project details',
-        message: 'Connect Supabase to view verified project details.',
-        icon: Icons.apartment_outlined,
-      );
+      return _PreviewProjectDetail(projectId: projectId);
     }
     final projects = ref.watch(projectCatalogueProvider);
     return Scaffold(
@@ -652,6 +625,399 @@ class ProjectDetailPage extends ConsumerWidget {
   }
 }
 
+class _PreviewProducts extends StatelessWidget {
+  const _PreviewProducts({this.enquiryContext});
+  final String? enquiryContext;
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Products')),
+    body: ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+      children: [
+        Text(
+          'Products & solutions',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 6),
+        const Text('Quality equipment selected for dependable performance.'),
+        const SizedBox(height: 16),
+        const _PreviewSearch(),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final c in ['All', 'Solar', 'Water Heating', 'Security'])
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(c),
+                    selected: c == 'All',
+                    onSelected: (_) {},
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (enquiryContext?.isNotEmpty == true) ...[
+          const SizedBox(height: 12),
+          _EnquiryContextCard(message: enquiryContext!),
+        ],
+        const SizedBox(height: 8),
+        _PreviewProductCard(
+          title: 'Solar Water Heater',
+          subtitle: '200L high efficiency system',
+          image: 'assets/images/solar-geyser.jpg',
+          price: 'Request current price',
+          id: 'solar-geyser',
+        ),
+        const SizedBox(height: 12),
+        _PreviewProductCard(
+          title: 'Solar Panel System',
+          subtitle: 'Residential and commercial packages',
+          image: 'assets/images/solar-panels.jpg',
+          price: 'Request a quote',
+          id: 'solar-system',
+        ),
+        const SizedBox(height: 12),
+        _PreviewProductCard(
+          title: 'CCTV Security System',
+          subtitle: 'Smart monitoring and installation',
+          image: 'assets/images/cctv-installation.jpg',
+          price: 'Request a quote',
+          id: 'cctv-system',
+        ),
+      ],
+    ),
+  );
+}
+
+class _PreviewSearch extends StatelessWidget {
+  const _PreviewSearch();
+  @override
+  Widget build(BuildContext context) => TextField(
+    readOnly: true,
+    decoration: InputDecoration(
+      hintText: 'Search products',
+      prefixIcon: const Icon(Icons.search),
+      filled: true,
+      fillColor: const Color(0xFFF6F8FA),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+    ),
+  );
+}
+
+class _PreviewProductCard extends StatelessWidget {
+  const _PreviewProductCard({
+    required this.title,
+    required this.subtitle,
+    required this.image,
+    required this.price,
+    required this.id,
+  });
+  final String title, subtitle, image, price, id;
+  @override
+  Widget build(BuildContext context) => ContentCard(
+    onTap: () => context.push('/products/$id'),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          child: Image.asset(image, height: 160, fit: BoxFit.cover),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.favorite_border,
+                    color: FixPkColors.muted,
+                    size: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height: 10),
+              Text(
+                price,
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(color: FixPkColors.action),
+              ),
+              const SizedBox(height: 8),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Text('View details'),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, size: 16),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _PreviewProductDetail extends StatelessWidget {
+  const _PreviewProductDetail({this.enquiryContext});
+  final String? enquiryContext;
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Product details')),
+    body: ListView(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Image.asset(
+            'assets/images/solar-geyser.jpg',
+            height: 245,
+            fit: BoxFit.cover,
+          ),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          'Solar Water Heater',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 6),
+        const Row(
+          children: [
+            Icon(Icons.star, color: Color(0xFFFFB547), size: 18),
+            SizedBox(width: 4),
+            Text('4.9  •  Efficient hot water for your home'),
+          ],
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          'A high-performance solar hot-water system supplied and installed by FixPK professionals.',
+        ),
+        const SizedBox(height: 18),
+        const Wrap(
+          spacing: 8,
+          children: [
+            Chip(label: Text('Energy efficient')),
+            Chip(label: Text('Warranty included')),
+          ],
+        ),
+        const SizedBox(height: 18),
+        Text('Specifications', style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: 8),
+        const ContentCard(
+          child: Column(
+            children: [
+              ListTile(title: Text('Capacity'), trailing: Text('200 L')),
+              Divider(height: 1),
+              ListTile(title: Text('System'), trailing: Text('Pressurized')),
+              Divider(height: 1),
+              ListTile(
+                title: Text('Installation'),
+                trailing: Text('Available'),
+              ),
+            ],
+          ),
+        ),
+        if (enquiryContext?.isNotEmpty == true) ...[
+          const SizedBox(height: 12),
+          _EnquiryContextCard(message: enquiryContext!),
+        ],
+        const SizedBox(height: 20),
+        AppButton(
+          label: 'Book a survey',
+          icon: Icons.calendar_month_outlined,
+          onPressed: () =>
+              context.go('/services?enquiry=Solar%20water%20heater%20survey'),
+        ),
+        const SizedBox(height: 8),
+        AppButton(
+          label: 'Request a quote',
+          kind: ActionKind.outline,
+          onPressed: () =>
+              context.go('/services?enquiry=Solar%20water%20heater%20quote'),
+        ),
+      ],
+    ),
+  );
+}
+
+class _PreviewProjects extends StatelessWidget {
+  const _PreviewProjects({this.enquiryContext});
+  final String? enquiryContext;
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Projects')),
+    body: ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+      children: [
+        Text(
+          'Selected projects',
+          style: Theme.of(context).textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 6),
+        const Text('A look at engineering work delivered by FixPK.'),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final c in ['All', 'Solar', 'Commercial', 'Security'])
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ChoiceChip(
+                    label: Text(c),
+                    selected: c == 'All',
+                    onSelected: (_) {},
+                  ),
+                ),
+            ],
+          ),
+        ),
+        if (enquiryContext?.isNotEmpty == true) ...[
+          const SizedBox(height: 12),
+          _EnquiryContextCard(message: enquiryContext!),
+        ],
+        const SizedBox(height: 8),
+        _ProjectPreviewCard(
+          title: 'Rooftop Solar Installation',
+          location: 'Islamabad',
+          image: 'assets/images/solar-panels.jpg',
+          id: 'solar-installation',
+        ),
+        const SizedBox(height: 12),
+        _ProjectPreviewCard(
+          title: 'Commercial Energy Upgrade',
+          location: 'Rawalpindi',
+          image: 'assets/images/commercial-project.jpg',
+          id: 'commercial-upgrade',
+        ),
+        const SizedBox(height: 12),
+        _ProjectPreviewCard(
+          title: 'Smart Security System',
+          location: 'Lahore',
+          image: 'assets/images/cctv-installation.jpg',
+          id: 'security-system',
+        ),
+      ],
+    ),
+  );
+}
+
+class _ProjectPreviewCard extends StatelessWidget {
+  const _ProjectPreviewCard({
+    required this.title,
+    required this.location,
+    required this.image,
+    required this.id,
+  });
+  final String title, location, image, id;
+  @override
+  Widget build(BuildContext context) => ContentCard(
+    onTap: () => context.push('/projects/$id'),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRRect(
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+          child: Image.asset(image, height: 190, fit: BoxFit.cover),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 4),
+                    Text(
+                      location,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward, color: FixPkColors.action),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _PreviewProjectDetail extends StatelessWidget {
+  const _PreviewProjectDetail({required this.projectId});
+  final String projectId;
+  @override
+  Widget build(BuildContext context) {
+    final security = projectId.contains('security');
+    final commercial = projectId.contains('commercial');
+    final title = security
+        ? 'Smart Security System'
+        : commercial
+        ? 'Commercial Energy Upgrade'
+        : 'Rooftop Solar Installation';
+    final image = security
+        ? 'assets/images/cctv-installation.jpg'
+        : commercial
+        ? 'assets/images/commercial-project.jpg'
+        : 'assets/images/solar-panels.jpg';
+    return Scaffold(
+      appBar: AppBar(title: const Text('Project details')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(image, height: 240, fit: BoxFit.cover),
+          ),
+          const SizedBox(height: 18),
+          Text(title, style: Theme.of(context).textTheme.headlineSmall),
+          const SizedBox(height: 6),
+          const Row(
+            children: [
+              Icon(
+                Icons.location_on_outlined,
+                size: 18,
+                color: FixPkColors.action,
+              ),
+              Text('Islamabad, Pakistan  •  Completed'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'FixPK delivered a complete, carefully planned installation with quality equipment, professional workmanship, and customer handover.',
+          ),
+          const SizedBox(height: 24),
+          AppButton(
+            label: 'Need a similar project?',
+            onPressed: () => context.go(
+              '/services?enquiry=${Uri.encodeQueryComponent('Similar project: $title')}',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EnquiryContextCard extends StatelessWidget {
   const _EnquiryContextCard({required this.message});
   final String message;
@@ -668,29 +1034,6 @@ class _EnquiryContextCard extends StatelessWidget {
     ),
   );
 }
-
-Widget _previewPage(
-  BuildContext context, {
-  required String title,
-  required String message,
-  required IconData icon,
-}) => Scaffold(
-  appBar: AppBar(title: Text(title)),
-  body: SafeArea(
-    child: Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: AppStatePanel(
-          title: 'Connect to see the live catalogue',
-          message: message,
-          icon: icon,
-          actionLabel: 'Browse services',
-          onAction: () => context.go('/services'),
-        ),
-      ),
-    ),
-  ),
-);
 
 String _productEnquiry(ProductRecord product) =>
     'Product quote: ${product.name}${product.sku.isEmpty ? '' : ' (SKU ${product.sku})'}';

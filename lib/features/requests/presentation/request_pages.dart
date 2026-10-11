@@ -4,15 +4,287 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/widgets/components.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../services/data/services_repository.dart';
 import '../../jobs/data/jobs_repository.dart';
 import '../data/request_repository.dart';
+
+class _PreviewRequests extends StatelessWidget {
+  const _PreviewRequests();
+  @override
+  Widget build(BuildContext context) => DefaultTabController(
+    length: 3,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Text(
+            'My requests',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+        ),
+        const TabBar(
+          tabs: [
+            Tab(text: 'All'),
+            Tab(text: 'Active'),
+            Tab(text: 'Completed'),
+          ],
+        ),
+        Expanded(
+          child: TabBarView(
+            children: [
+              for (var tab = 0; tab < 3; tab++)
+                ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    if (tab != 2)
+                      _PreviewRequestCard(
+                        id: 'solar-request',
+                        title: 'Solar Panel Installation',
+                        reference: 'FPK-2026-0142',
+                        status: 'Site survey scheduled',
+                        image: 'assets/images/solar-panels.jpg',
+                        tone: StatusTone.information,
+                      ),
+                    if (tab != 2) const SizedBox(height: 12),
+                    if (tab != 1)
+                      _PreviewRequestCard(
+                        id: 'geyser-request',
+                        title: 'Solar Water Heater',
+                        reference: 'FPK-2026-0098',
+                        status: 'Completed',
+                        image: 'assets/images/solar-geyser.jpg',
+                        tone: StatusTone.success,
+                      ),
+                    if (tab == 2) const SizedBox(height: 12),
+                    if (tab == 2)
+                      _PreviewRequestCard(
+                        id: 'cctv-request',
+                        title: 'CCTV Installation',
+                        reference: 'FPK-2026-0085',
+                        status: 'Completed',
+                        image: 'assets/images/cctv-installation.jpg',
+                        tone: StatusTone.success,
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _PreviewRequestCard extends StatelessWidget {
+  const _PreviewRequestCard({
+    required this.id,
+    required this.title,
+    required this.reference,
+    required this.status,
+    required this.image,
+    required this.tone,
+  });
+  final String id, title, reference, status, image;
+  final StatusTone tone;
+  @override
+  Widget build(BuildContext context) => ContentCard(
+    onTap: () => context.push('/requests/$id'),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(10),
+          child: Image.asset(image, width: 82, height: 88, fit: BoxFit.cover),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 6),
+              Text(reference, style: Theme.of(context).textTheme.bodySmall),
+              const SizedBox(height: 8),
+              StatusChip(label: status, tone: tone),
+              const SizedBox(height: 6),
+              const Row(
+                children: [
+                  Text(
+                    'Track request',
+                    style: TextStyle(
+                      color: FixPkColors.action,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(
+                    Icons.arrow_forward,
+                    color: FixPkColors.action,
+                    size: 16,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _PreviewRequestDetail extends StatelessWidget {
+  const _PreviewRequestDetail({required this.requestId});
+  final String requestId;
+  @override
+  Widget build(BuildContext context) {
+    final completed =
+        requestId.contains('geyser') || requestId.contains('cctv');
+    final title = requestId.contains('geyser')
+        ? 'Solar Water Heater'
+        : requestId.contains('cctv')
+        ? 'CCTV Installation'
+        : 'Solar Panel Installation';
+    final image = requestId.contains('geyser')
+        ? 'assets/images/solar-geyser.jpg'
+        : requestId.contains('cctv')
+        ? 'assets/images/cctv-installation.jpg'
+        : 'assets/images/solar-panels.jpg';
+    final stages = [
+      'Request submitted',
+      'FixPK review',
+      'Site survey',
+      'Quote prepared',
+      'Technician assigned',
+      'Work completed',
+    ];
+    final last = completed ? stages.length - 1 : 2;
+    return Scaffold(
+      appBar: AppBar(title: const Text('Request tracking')),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(14),
+            child: Image.asset(image, height: 165, fit: BoxFit.cover),
+          ),
+          const SizedBox(height: 16),
+          Text(title, style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 4),
+          const Text('Reference FPK-2026-0142'),
+          const SizedBox(height: 12),
+          StatusChip(
+            label: completed ? 'Completed' : 'Site survey scheduled',
+            tone: completed ? StatusTone.success : StatusTone.information,
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Request progress',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < stages.length; i++)
+            _TimelineRow(
+              title: stages[i],
+              active: i <= last,
+              last: i == stages.length - 1,
+              subtitle: i == last
+                  ? (completed
+                        ? 'Job completed successfully'
+                        : 'Your visit is being arranged')
+                  : null,
+            ),
+          if (!completed) ...[
+            const SizedBox(height: 16),
+            AppButton(
+              label: 'View quotation',
+              icon: Icons.request_quote_outlined,
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Your quote is being prepared by FixPK.'),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineRow extends StatelessWidget {
+  const _TimelineRow({
+    required this.title,
+    required this.active,
+    required this.last,
+    this.subtitle,
+  });
+  final String title;
+  final bool active, last;
+  final String? subtitle;
+  @override
+  Widget build(BuildContext context) => IntrinsicHeight(
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          width: 28,
+          child: Column(
+            children: [
+              Container(
+                width: 20,
+                height: 20,
+                decoration: BoxDecoration(
+                  color: active ? FixPkColors.action : Colors.white,
+                  border: Border.all(
+                    color: active ? FixPkColors.action : FixPkColors.border,
+                    width: 2,
+                  ),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              if (!last)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: active ? FixPkColors.action : FixPkColors.border,
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 19),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+                    color: active ? FixPkColors.ink : FixPkColors.muted,
+                  ),
+                ),
+                if (subtitle != null)
+                  Text(subtitle!, style: Theme.of(context).textTheme.bodySmall),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
 class RequestsPage extends ConsumerWidget {
   const RequestsPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(configProvider).preview) return const _PreviewRequests();
     final userState = ref.watch(authUserProvider);
     return userState.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -127,6 +399,8 @@ class RequestDetailPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(configProvider).preview)
+      return _PreviewRequestDetail(requestId: requestId);
     final user = ref.watch(authUserProvider).value;
     if (user == null) {
       return Scaffold(

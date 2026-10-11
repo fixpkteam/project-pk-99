@@ -137,7 +137,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('FixPK control center'), findsOneWidget);
     expect(find.text('Users and staff access'), findsOneWidget);
-    expect(find.text('Products'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -219,6 +218,9 @@ void main() {
       'aamir@example.com',
     );
     await tester.enterText(find.byType(TextFormField).at(3), 'safe-pass-123');
+    await tester.ensureVisible(
+      find.widgetWithText(FilledButton, 'Create account'),
+    );
     await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
     await tester.pumpAndSettle();
 

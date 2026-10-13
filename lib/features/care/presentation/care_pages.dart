@@ -6,6 +6,7 @@ import '../../../app/providers.dart';
 import '../../../core/widgets/components.dart';
 import '../../jobs/data/jobs_repository.dart';
 import '../data/care_repository.dart';
+import '../data/public_content_repository.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -686,49 +687,59 @@ class _ReviewComposerPageState extends ConsumerState<ReviewComposerPage> {
   }
 }
 
-class LegalPage extends StatelessWidget {
+class LegalPage extends ConsumerWidget {
   const LegalPage({super.key});
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Legal and privacy')),
-    body: ListView(
-      padding: const EdgeInsets.all(16),
-      children: const [
-        ContentCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Privacy',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Use your account preferences to manage notification channels. FixPK’s full privacy policy will be published before production release.',
-              ),
-            ],
-          ),
+  Widget build(BuildContext context, WidgetRef ref) => Scaffold(
+    appBar: AppBar(
+      title: const Text('Legal and privacy'),
+      actions: [
+        IconButton(
+          tooltip: 'Refresh policies',
+          icon: const Icon(Icons.refresh),
+          onPressed: () => ref.invalidate(legalContentProvider),
         ),
-        SizedBox(height: 12),
-        ContentCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Service terms',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-              SizedBox(height: 8),
-              Text(
-                'Service availability, survey scheduling and quotations are confirmed by FixPK. Full service terms will be published before production release.',
-              ),
-            ],
-          ),
-        ),
-        SizedBox(height: 12),
-        Text('Have questions? Contact FixPK through Support in your account.'),
       ],
+    ),
+    body: SafeArea(
+      child: ref
+          .watch(legalContentProvider)
+          .when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (_, _) => AppStatePanel(
+              title: 'Policies could not load',
+              message: 'Check your connection and try again.',
+              actionLabel: 'Retry',
+              onAction: () => ref.invalidate(legalContentProvider),
+            ),
+            data: (items) => items.isEmpty
+                ? AppStatePanel(
+                    title: 'Policies are not available yet',
+                    message:
+                        'Contact FixPK for privacy and service information.',
+                    actionLabel: 'Contact support',
+                    onAction: () => context.push('/account/support'),
+                  )
+                : ListView.separated(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 16),
+                    itemBuilder: (context, index) => ContentCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            items[index].title,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                          const SizedBox(height: 12),
+                          SelectableText(items[index].text),
+                        ],
+                      ),
+                    ),
+                  ),
+          ),
     ),
   );
 }

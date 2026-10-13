@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/components.dart';
+import 'home_campaigns.dart';
 
 const foundationServices = <({String title, String subtitle, IconData icon})>[
   (
@@ -104,6 +105,7 @@ class HomePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   child: Image.asset(
                     'assets/brand/fixpk-app-icon.png',
+                    cacheWidth: 126,
                     width: 42,
                     height: 42,
                     fit: BoxFit.cover,
@@ -123,7 +125,7 @@ class HomePage extends StatelessWidget {
                         ),
                       ),
                       InkWell(
-                        onTap: () {},
+                        onTap: () => context.push('/account/addresses'),
                         child: const Row(
                           children: [
                             Icon(
@@ -132,11 +134,15 @@ class HomePage extends StatelessWidget {
                               color: FixPkColors.action,
                             ),
                             SizedBox(width: 3),
-                            Text(
-                              'Islamabad, Pakistan',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: FixPkColors.body,
+                            Expanded(
+                              child: Text(
+                                'Service address',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: FixPkColors.body,
+                                ),
                               ),
                             ),
                             Icon(
@@ -172,9 +178,10 @@ class HomePage extends StatelessWidget {
                 ),
               ],
             ),
+            const HomeCampaigns(),
             const SizedBox(height: 16),
             Container(
-              height: 205,
+              constraints: const BoxConstraints(minHeight: 205),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 image: const DecorationImage(
@@ -184,18 +191,20 @@ class HomePage extends StatelessWidget {
               ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
-                fit: StackFit.expand,
+                fit: StackFit.loose,
                 children: [
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          Color(0xE600263E),
-                          Color(0x7700263E),
-                          Color(0x1200263E),
-                        ],
+                  const Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Color(0xE600263E),
+                            Color(0x7700263E),
+                            Color(0x1200263E),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -204,6 +213,7 @@ class HomePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
                           'ENGINEERING • INSTALLATION • CARE',
@@ -230,8 +240,8 @@ class HomePage extends StatelessWidget {
                           style: TextStyle(color: Colors.white, fontSize: 12),
                         ),
                         const SizedBox(height: 14),
-                        SizedBox(
-                          height: 38,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
                           child: FilledButton(
                             onPressed: () => context.go('/services'),
                             style: FilledButton.styleFrom(
@@ -286,9 +296,13 @@ class HomePage extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 8,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4,
-                childAspectRatio: .82,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount:
+                    MediaQuery.sizeOf(context).width < 360 ||
+                        MediaQuery.textScalerOf(context).scale(12) > 16
+                    ? 2
+                    : 4,
+                mainAxisExtent: 72 + MediaQuery.textScalerOf(context).scale(32),
                 crossAxisSpacing: 8,
                 mainAxisSpacing: 8,
               ),
@@ -331,30 +345,35 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Container(
-              height: 142,
+              constraints: const BoxConstraints(minHeight: 142),
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
                 color: FixPkColors.navy,
               ),
               child: Stack(
-                fit: StackFit.expand,
+                fit: StackFit.loose,
                 children: [
-                  Image.asset(
-                    'assets/images/solar-panels.jpg',
-                    fit: BoxFit.cover,
-                    alignment: Alignment.centerRight,
+                  Positioned.fill(
+                    child: Image.asset(
+                      'assets/images/solar-panels.jpg',
+                      cacheWidth: 900,
+                      fit: BoxFit.cover,
+                      alignment: Alignment.centerRight,
+                    ),
                   ),
-                  const DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.centerLeft,
-                        end: Alignment.centerRight,
-                        colors: [
-                          FixPkColors.navy,
-                          Color(0xE600263E),
-                          Color(0x1100263E),
-                        ],
+                  const Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            FixPkColors.navy,
+                            Color(0xE600263E),
+                            Color(0x1100263E),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -363,6 +382,7 @@ class HomePage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         const Text(
                           'SOLAR SURVEY',
@@ -383,8 +403,8 @@ class HomePage extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        SizedBox(
-                          height: 34,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(minHeight: 48),
                           child: OutlinedButton(
                             onPressed: () => context.go(
                               '/services?enquiry=Free%20solar%20site%20survey',

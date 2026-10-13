@@ -1,4 +1,4 @@
-name: FixPK foundation
+name: FixPK quality and builds
 on:
   push:
   pull_request:
@@ -10,15 +10,15 @@ env:
   FLUTTER_SUPPRESS_ANALYTICS: 'true'
 jobs:
   checks:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-flutter
       - run: bash tool/check.sh
   supabase-functions:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
@@ -26,12 +26,12 @@ jobs:
       - run: deno check supabase/functions/admin-user-management/index.ts
   supabase-smoke:
     if: ${{ vars.SUPABASE_URL != '' && vars.SUPABASE_PUBLISHABLE_KEY != '' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       SUPABASE_URL: ${{ vars.SUPABASE_URL }}
       SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Create temporary connected check config
         run: |
           python3 - <<'PYCODE'
@@ -45,10 +45,10 @@ jobs:
           PYCODE
       - run: python3 tool/supabase_smoke_check.py --config /tmp/fixpk-supabase-check.json
   android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: '17'
@@ -81,10 +81,84 @@ jobs:
           path: build/app/outputs/flutter-apk/app-debug.apk
           if-no-files-found: error
           retention-days: 14
+  android-device-tests:
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        api-level: [24, 36]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: ./.github/actions/setup-flutter
+      - run: flutter pub get --enforce-lockfile
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api-level }}
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: flutter test integration_test/app_smoke_test.dart -d emulator-5554 --dart-define-from-file=config/development.example.json
+  android-optimized:
+    needs: checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      SUPABASE_URL: ${{ vars.SUPABASE_URL }}
+      SUPABASE_PUBLISHABLE_KEY: ${{ vars.SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: ./.github/actions/setup-flutter
+      - run: flutter pub get --enforce-lockfile
+      - name: Validate connected build configuration
+        run: |
+          test -n "$SUPABASE_URL"
+          test -n "$SUPABASE_PUBLISHABLE_KEY"
+      - name: Build optimized APKs for physical device profiling
+        run: >-
+          flutter build apk --profile --split-per-abi
+          --target-platform=android-arm,android-arm64
+          --dart-define=APP_ENV=staging
+          --dart-define=FOUNDATION_PREVIEW=false
+          --dart-define=SUPABASE_URL=$SUPABASE_URL
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fixpk-profile-apks-${{ github.run_number }}
+          path: build/app/outputs/flutter-apk/*-profile.apk
+          if-no-files-found: error
+          retention-days: 14
+      - name: Compile production app bundle (unsigned validation only)
+        run: >-
+          flutter build appbundle --release
+          --dart-define=APP_ENV=production
+          --dart-define=FOUNDATION_PREVIEW=false
+          --dart-define=SUPABASE_URL=$SUPABASE_URL
+          --dart-define=SUPABASE_PUBLISHABLE_KEY=$SUPABASE_PUBLISHABLE_KEY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fixpk-unsigned-release-bundle-${{ github.run_number }}
+          path: build/app/outputs/bundle/release/*.aab
+          if-no-files-found: error
+          retention-days: 14
   ios:
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup-flutter
       - run: flutter pub get --enforce-lockfile
       - run: flutter build ios --simulator --debug --dart-define-from-file=config/development.example.json

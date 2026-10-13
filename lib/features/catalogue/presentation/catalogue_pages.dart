@@ -19,12 +19,13 @@ Widget _catalogueImage(
   String? url,
   String semanticLabel, {
   double height = 180,
+  double? width,
 }) => Semantics(
   label: semanticLabel,
   image: true,
   child: SizedBox(
     height: height,
-    width: double.infinity,
+    width: width ?? double.infinity,
     child: url == null || url.isEmpty
         ? const ColoredBox(
             color: Color(0xFFF3F5F8),
@@ -35,6 +36,7 @@ Widget _catalogueImage(
         : Image.network(
             url,
             fit: BoxFit.cover,
+            cacheWidth: height <= 80 ? 240 : 900,
             errorBuilder: (_, _, _) => const ColoredBox(
               color: Color(0xFFF3F5F8),
               child: Center(
@@ -97,81 +99,92 @@ class _ProductsPageState extends ConsumerState<ProductsPage> {
                       .contains(query);
               return categoryMatches && searchMatches;
             }).toList();
-            return ListView(
+            return ListView.builder(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-              children: [
-                Text(
-                  'Products and solutions',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Browse FixPK products. Availability and final pricing are confirmed by our team.',
-                ),
-                if (widget.enquiryContext?.isNotEmpty == true) ...[
-                  const SizedBox(height: 16),
-                  _EnquiryContextCard(message: widget.enquiryContext!),
-                ],
-                const SizedBox(height: 20),
-                AppSearchField(
-                  controller: _search,
-                  onChanged: (value) => setState(() => _query = value),
-                ),
-                if (data.categories.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+              itemCount: products.length + 1,
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      FilterChip(
-                        label: const Text('All'),
-                        selected: _categoryId == null,
-                        onSelected: (_) => setState(() => _categoryId = null),
+                      Text(
+                        'Products and solutions',
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
-                      for (final category in data.categories)
-                        FilterChip(
-                          label: Text(category.name),
-                          selected: _categoryId == category.id,
-                          onSelected: (_) => setState(
-                            () => _categoryId = _categoryId == category.id
-                                ? null
-                                : category.id,
-                          ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Browse FixPK products. Availability and final pricing are confirmed by our team.',
+                      ),
+                      if (widget.enquiryContext?.isNotEmpty == true) ...[
+                        const SizedBox(height: 16),
+                        _EnquiryContextCard(message: widget.enquiryContext!),
+                      ],
+                      const SizedBox(height: 20),
+                      AppSearchField(
+                        controller: _search,
+                        onChanged: (value) => setState(() => _query = value),
+                      ),
+                      if (data.categories.isNotEmpty) ...[
+                        const SizedBox(height: 16),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            FilterChip(
+                              label: const Text('All'),
+                              selected: _categoryId == null,
+                              onSelected: (_) =>
+                                  setState(() => _categoryId = null),
+                            ),
+                            for (final category in data.categories)
+                              FilterChip(
+                                label: Text(category.name),
+                                selected: _categoryId == category.id,
+                                onSelected: (_) => setState(
+                                  () => _categoryId = _categoryId == category.id
+                                      ? null
+                                      : category.id,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 16),
+                      if (products.isEmpty)
+                        AppStatePanel(
+                          title: data.products.isEmpty
+                              ? 'Products are being prepared'
+                              : 'No matching products',
+                          message: data.products.isEmpty
+                              ? 'Please check back soon or contact FixPK for help.'
+                              : 'Try another search or clear the category filter.',
+                          icon: Icons.inventory_2_outlined,
+                          actionLabel: data.products.isEmpty
+                              ? null
+                              : 'Clear filters',
+                          onAction: data.products.isEmpty
+                              ? null
+                              : () => setState(() {
+                                  _categoryId = null;
+                                  _query = '';
+                                  _search.clear();
+                                }),
                         ),
                     ],
-                  ),
-                ],
-                const SizedBox(height: 16),
-                if (products.isEmpty)
-                  AppStatePanel(
-                    title: data.products.isEmpty
-                        ? 'Products are being prepared'
-                        : 'No matching products',
-                    message: data.products.isEmpty
-                        ? 'Please check back soon or contact FixPK for help.'
-                        : 'Try another search or clear the category filter.',
-                    icon: Icons.inventory_2_outlined,
-                    actionLabel: data.products.isEmpty ? null : 'Clear filters',
-                    onAction: data.products.isEmpty
-                        ? null
-                        : () => setState(() {
-                            _categoryId = null;
-                            _query = '';
-                            _search.clear();
-                          }),
-                  )
-                else
-                  for (final product in products) ...[
-                    _ProductCard(
-                      product: product,
-                      onTap: () => context.push(
-                        '/products/${Uri.encodeComponent(product.id)}',
-                        extra: widget.enquiryContext,
-                      ),
+                  );
+                }
+                final product = products[index - 1];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _ProductCard(
+                    product: product,
+                    onTap: () => context.push(
+                      '/products/${Uri.encodeComponent(product.id)}',
+                      extra: widget.enquiryContext,
                     ),
-                    const SizedBox(height: 12),
-                  ],
-              ],
+                  ),
+                );
+              },
             );
           },
         ),
@@ -317,6 +330,7 @@ class ProductDetailPage extends ConsumerWidget {
                           product.images[index].url,
                           product.images[index].altText,
                           height: 72,
+                          width: 104,
                         ),
                       ),
                     ),
@@ -450,30 +464,39 @@ class ProjectsPage extends ConsumerWidget {
                 message: 'Please check back soon for completed FixPK projects.',
                 icon: Icons.apartment_outlined,
               )
-            : ListView(
+            : ListView.builder(
                 padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-                children: [
-                  Text(
-                    'Selected projects',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Explore work completed for homes, businesses and industrial sites.',
-                  ),
-                  if (enquiryContext?.isNotEmpty == true) ...[
-                    const SizedBox(height: 16),
-                    _EnquiryContextCard(message: enquiryContext!),
-                  ],
-                  const SizedBox(height: 16),
-                  for (final project in items) ...[
-                    _ProjectCard(
+                itemCount: items.length + 1,
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          'Selected projects',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Explore work completed for homes, businesses and industrial sites.',
+                        ),
+                        if (enquiryContext?.isNotEmpty == true) ...[
+                          const SizedBox(height: 16),
+                          _EnquiryContextCard(message: enquiryContext!),
+                        ],
+                        const SizedBox(height: 16),
+                      ],
+                    );
+                  }
+                  final project = items[index - 1];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _ProjectCard(
                       project: project,
                       onTap: () => context.push('/projects/${project.id}'),
                     ),
-                    const SizedBox(height: 12),
-                  ],
-                ],
+                  );
+                },
               ),
       ),
     );

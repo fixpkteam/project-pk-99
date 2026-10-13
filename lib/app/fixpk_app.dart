@@ -5,6 +5,7 @@ import '../core/theme/app_theme.dart';
 import '../core/widgets/components.dart';
 import 'app_router.dart';
 import 'providers.dart';
+import '../features/requests/presentation/outbox_sync.dart';
 
 class FixPkApp extends ConsumerWidget {
   const FixPkApp({super.key});
@@ -13,6 +14,8 @@ class FixPkApp extends ConsumerWidget {
     final startup = ref.watch(bootstrapProvider);
     return startup.when(
       data: (_) => MaterialApp.router(
+        builder: (context, child) =>
+            OutboxSync(child: child ?? const SizedBox.shrink()),
         title: 'FixPK',
         debugShowCheckedModeBanner: false,
         theme: FixPkTheme.light,

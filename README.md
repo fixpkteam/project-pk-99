@@ -7,7 +7,7 @@ Flutter customer-app foundation for Android and iOS, with a web target for devel
 - Flutter **3.47.7**, bundled Dart **3.13.5**, exact direct dependency pins and a resolved lockfile.
 - Feature-based structure, Riverpod dependency injection and `go_router` indexed navigation.
 - Home, searchable service catalogue, service categories/details, guest browsing, and an account entry point.
-- Supabase Auth sign-in/sign-up, password-reset email request, profile editing, and sign-out in connected mode.
+- Supabase Auth sign-in/sign-up, password recovery and new-password screen, profile editing, and sign-out in connected mode.
 - Published service categories and services load from Supabase; preview mode remains credential-free.
 - Saved address management and a dynamic five-step request form with answers, schedule preferences, and private attachment uploads.
 - Customer request history/details, site-survey requests, appointment summaries, quote line items, and secure quote decisions through PostgreSQL functions.
@@ -16,7 +16,7 @@ Flutter customer-app foundation for Android and iOS, with a web target for devel
 - Role-gated admin panel for allowlisted service/product/project/CMS CRUD, catalogue image uploads, user-role management and sign-in suspension.
 - FixPK blue/navy/white theme and interactive component gallery at `/components`.
 - Startup loading/failure/retry, unknown-route recovery, configuration validation and event-only logging.
-- Preferences and secure-storage interfaces/adapters, ready for future feature integration.
+- Durable offline quote requests with attachment persistence and retry on reconnect/resume; cached catalogue and previously fetched customer information.
 - Unit/widget tests, CI configuration and architectural/API planning documents.
 
 The app supports a local preview and connected Supabase mode. Delivery 3 implements the customer request-to-quote journey, and the user reports running the supplemental survey/quote command SQL. Delivery 4 implements job progress, products, and projects. Delivery 5 implements customer care and staff operations. The admin console also requires `supabase/sql/admin_console_policies.sql` and the `admin-user-management` Edge Function; see [Admin and prelaunch verification](docs/ADMIN_AND_PRELAUNCH.md). Gallery examples are explicitly samples.
@@ -62,7 +62,7 @@ flutter build ios --simulator --debug --dart-define-from-file=config/development
 
 `tool/check.sh` performs version, dependency-lock, formatting, analysis, unit/widget tests and web-build checks. Native builds require their platform toolchains. CI includes Android and iOS simulator build jobs, but a local workflow file does not mean hosted CI has run.
 
-For a read-only health check of the configured connected development project, run `python3 tool/supabase_smoke_check.py --config config/development.json`. It checks Auth settings and public categories/services/FAQ only; it does not verify private customer data access, staff role policies, or production release credentials.
+For a read-only health check of the configured connected development project, run `python3 tool/supabase_smoke_check.py --config config/development.json`. It runs 30 read-only API checks including anonymous private-table and function denial. Authenticated mutation coverage, signing and device performance require the separate audit matrix.
 
 ## Structure
 
@@ -97,3 +97,7 @@ Read `docs/ROADMAP.md` for the combined delivery plan, `docs/COMBINED_DELIVERY_5
 ## Verified handoff
 
 Combined Delivery 5 validation and the limited connected Supabase smoke check are recorded in `docs/COMBINED_DELIVERY_5_STATUS.md` and `docs/COMBINED_DELIVERY_6_STATUS.md`. Customer/staff RLS and Android/iOS device checks remain outstanding. Review phone renders in `docs/previews/home.png` and `docs/previews/services.png`; reproduction instructions are in the validation records.
+
+## Current launch audit
+
+See [Performance and offline launch audit](docs/PRELAUNCH_AUDIT.md) for verified changes, offline behavior, native CI coverage and remaining launch blockers. Published business content, legal/deletion flows, Auth redirect configuration, upload signing and physical-device profiling are still required.

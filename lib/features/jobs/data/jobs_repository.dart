@@ -83,9 +83,11 @@ class JobsRepository {
   }
 }
 
-final jobsRepositoryProvider = Provider<JobsRepository>(
-  (ref) => JobsRepository(ref.watch(supabaseClientProvider)),
-);
+final jobsRepositoryProvider = Provider<JobsRepository>((ref) {
+  // Drop in-memory private reads when the authenticated account changes.
+  ref.watch(authUserProvider.select((state) => state.value?.id));
+  return JobsRepository(ref.watch(supabaseClientProvider));
+});
 
 final requestJobsProvider = FutureProvider.family<List<JobRecord>, String>(
   (ref, requestId) =>

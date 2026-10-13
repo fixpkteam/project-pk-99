@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/storage/read_cache.dart';
 
 class NotificationRecord {
   const NotificationRecord({
@@ -195,20 +196,31 @@ class StaffRequestSummary {
 }
 
 class CareRepository {
-  const CareRepository(this._client);
+  const CareRepository(this._client, this._cache);
   final SupabaseClient _client;
+  final ReadCache _cache;
 
   String? get _currentUserId => _client.auth.currentUser?.id;
 
-  Future<List<NotificationRecord>> fetchNotifications(String profileId) async {
-    final rows = await _client
-        .from('notifications')
-        .select('id,title,body,notification_type,deep_link,read_at,created_at')
-        .eq('profile_id', profileId)
-        .order('created_at', ascending: false)
-        .limit(100);
-    return rows.map(NotificationRecord.fromRow).toList(growable: false);
-  }
+  Stream<List<NotificationRecord>> watchNotifications(String profileId) =>
+      _cache.watch(
+        'user.$profileId.notifications',
+        () async {
+          final rows = await _client
+              .from('notifications')
+              .select(
+                'id,title,body,notification_type,deep_link,read_at,created_at',
+              )
+              .eq('profile_id', profileId)
+              .order('created_at', ascending: false)
+              .limit(100);
+          return rows;
+        },
+        (data) => (data as List)
+            .cast<Map<String, dynamic>>()
+            .map(NotificationRecord.fromRow)
+            .toList(growable: false),
+      );
 
   Future<void> markNotificationRead(String profileId, String id) async {
     await _client
@@ -218,15 +230,25 @@ class CareRepository {
         .eq('profile_id', profileId);
   }
 
-  Future<List<SupportTicketRecord>> fetchTickets(String profileId) async {
-    final rows = await _client
-        .from('support_tickets')
-        .select('id,subject,message,status,priority,created_at,updated_at')
-        .eq('profile_id', profileId)
-        .order('created_at', ascending: false)
-        .limit(50);
-    return rows.map(SupportTicketRecord.fromRow).toList(growable: false);
-  }
+  Stream<List<SupportTicketRecord>> watchTickets(String profileId) =>
+      _cache.watch(
+        'user.$profileId.tickets',
+        () async {
+          final rows = await _client
+              .from('support_tickets')
+              .select(
+                'id,subject,message,status,priority,created_at,updated_at',
+              )
+              .eq('profile_id', profileId)
+              .order('created_at', ascending: false)
+              .limit(50);
+          return rows;
+        },
+        (data) => (data as List)
+            .cast<Map<String, dynamic>>()
+            .map(SupportTicketRecord.fromRow)
+            .toList(growable: false),
+      );
 
   Future<void> createTicket({
     required String subject,
@@ -242,15 +264,22 @@ class CareRepository {
     });
   }
 
-  Future<List<FaqRecord>> fetchFaq(String languageCode) async {
-    final rows = await _client
-        .from('faq')
-        .select('id,question,answer,language_code,sort_order')
-        .eq('is_published', true)
-        .eq('language_code', languageCode)
-        .order('sort_order');
-    return rows.map(FaqRecord.fromRow).toList(growable: false);
-  }
+  Stream<List<FaqRecord>> watchFaq(String languageCode) => _cache.watch(
+    'faq.$languageCode',
+    () async {
+      final rows = await _client
+          .from('faq')
+          .select('id,question,answer,language_code,sort_order')
+          .eq('is_published', true)
+          .eq('language_code', languageCode)
+          .order('sort_order');
+      return rows;
+    },
+    (data) => (data as List)
+        .cast<Map<String, dynamic>>()
+        .map(FaqRecord.fromRow)
+        .toList(growable: false),
+  );
 
   Future<UserPreferencesRecord> fetchPreferences(String profileId) async {
     final row = await _client
@@ -269,14 +298,21 @@ class CareRepository {
     await _client.from('user_preferences').upsert(value.toRow());
   }
 
-  Future<List<ReviewRecord>> fetchOwnReviews(String profileId) async {
-    final rows = await _client
-        .from('reviews')
-        .select('id,job_id,rating,review_text,status,created_at')
-        .eq('profile_id', profileId)
-        .order('created_at', ascending: false);
-    return rows.map(ReviewRecord.fromRow).toList(growable: false);
-  }
+  Stream<List<ReviewRecord>> watchOwnReviews(String profileId) => _cache.watch(
+    'user.$profileId.reviews',
+    () async {
+      final rows = await _client
+          .from('reviews')
+          .select('id,job_id,rating,review_text,status,created_at')
+          .eq('profile_id', profileId)
+          .order('created_at', ascending: false);
+      return rows;
+    },
+    (data) => (data as List)
+        .cast<Map<String, dynamic>>()
+        .map(ReviewRecord.fromRow)
+        .toList(growable: false),
+  );
 
   Future<void> submitReview({
     required String jobId,
@@ -365,25 +401,30 @@ class CareRepository {
 int _asInt(Object? value) =>
     value is num ? value.toInt() : int.tryParse('$value') ?? 0;
 
-final careRepositoryProvider = Provider<CareRepository>(
-  (ref) => CareRepository(ref.watch(supabaseClientProvider)),
-);
+final careRepositoryProvider = Provider<CareRepository>((ref) {
+  // Drop in-memory private reads when the authenticated account changes.
+  ref.watch(authUserProvider.select((state) => state.value?.id));
+  return CareRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(readCacheProvider),
+  );
+});
 
 final notificationListProvider =
-    FutureProvider.family<List<NotificationRecord>, String>(
+    StreamProvider.family<List<NotificationRecord>, String>(
       (ref, profileId) =>
-          ref.watch(careRepositoryProvider).fetchNotifications(profileId),
+          ref.watch(careRepositoryProvider).watchNotifications(profileId),
     );
 
 final supportTicketListProvider =
-    FutureProvider.family<List<SupportTicketRecord>, String>(
+    StreamProvider.family<List<SupportTicketRecord>, String>(
       (ref, profileId) =>
-          ref.watch(careRepositoryProvider).fetchTickets(profileId),
+          ref.watch(careRepositoryProvider).watchTickets(profileId),
     );
 
-final faqListProvider = FutureProvider.family<List<FaqRecord>, String>(
+final faqListProvider = StreamProvider.family<List<FaqRecord>, String>(
   (ref, languageCode) =>
-      ref.watch(careRepositoryProvider).fetchFaq(languageCode),
+      ref.watch(careRepositoryProvider).watchFaq(languageCode),
 );
 
 final userPreferencesProvider =
@@ -392,9 +433,9 @@ final userPreferencesProvider =
           ref.watch(careRepositoryProvider).fetchPreferences(profileId),
     );
 
-final ownReviewListProvider = FutureProvider.family<List<ReviewRecord>, String>(
+final ownReviewListProvider = StreamProvider.family<List<ReviewRecord>, String>(
   (ref, profileId) =>
-      ref.watch(careRepositoryProvider).fetchOwnReviews(profileId),
+      ref.watch(careRepositoryProvider).watchOwnReviews(profileId),
 );
 
 final staffRoleListProvider =

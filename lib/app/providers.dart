@@ -6,12 +6,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/config/app_config.dart';
 import '../core/logging/app_logger.dart';
 import '../core/storage/app_storage.dart';
+import '../core/storage/device_store.dart';
+import '../core/storage/durable_store.dart';
+import '../core/storage/read_cache.dart';
+import '../core/network/bounded_client.dart';
+
+import 'package:http/http.dart' as http;
+
 import '../features/auth/data/auth_repository.dart';
 
 final configProvider = Provider<AppConfig>(
   (ref) => AppConfig.fromEnvironment(),
   retry: (count, error) => null,
 );
+final durableStoreProvider = Provider<DurableStore>((ref) => DeviceStore());
+final readCacheProvider = Provider<ReadCache>(
+  (ref) => ReadCache(ref.watch(durableStoreProvider)),
+);
+
 final loggerProvider = Provider<AppLogger>((ref) => const AppLogger());
 final preferencesProvider = Provider<PreferencesStore>(
   (ref) => LocalPreferencesStore(SharedPreferencesAsync()),
@@ -28,6 +40,7 @@ final backendInitializerProvider = Provider<BackendInitializer>((ref) {
       url: config.supabaseUrl,
       publishableKey: config.supabasePublishableKey,
       debug: false,
+      httpClient: BoundedClient(http.Client()),
     );
   };
 });
@@ -49,6 +62,11 @@ final authUserProvider = StreamProvider<User?>((ref) {
   final config = ref.watch(configProvider);
   if (config.preview) return Stream<User?>.value(null);
   return ref.watch(authRepositoryProvider).userChanges;
+});
+
+final authEventsProvider = StreamProvider<AuthState>((ref) {
+  if (ref.watch(configProvider).preview) return const Stream.empty();
+  return ref.watch(supabaseClientProvider).auth.onAuthStateChange;
 });
 
 final bootstrapProvider = FutureProvider<AppConfig>((ref) async {

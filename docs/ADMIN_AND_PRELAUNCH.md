@@ -1,5 +1,7 @@
 # FixPK admin console and prelaunch verification
 
+Current verification and open launch gates: [13 October audit](PRELAUNCH_AUDIT.md).
+
 ## Admin console
 
 The signed-in `admin` role can open `/admin` from the account screen. The console provides:

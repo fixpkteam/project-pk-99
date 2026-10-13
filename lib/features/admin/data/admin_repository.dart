@@ -33,10 +33,11 @@ const adminContentTables = <AdminContentTable>[
     description: 'Organize services into customer-facing groups.',
     createValues: {
       'name': '',
+      'slug': '',
       'description': '',
       'icon_name': 'handyman',
       'sort_order': 0,
-      'is_active': true,
+      'is_published': false,
     },
   ),
   AdminContentTable(
@@ -48,10 +49,11 @@ const adminContentTables = <AdminContentTable>[
     createValues: {
       'category_id': '',
       'name': '',
-      'short_description': '',
+      'slug': '',
+      'summary': '',
       'description': '',
       'sort_order': 0,
-      'is_active': true,
+      'is_published': false,
     },
   ),
   AdminContentTable(
@@ -88,6 +90,7 @@ const adminContentTables = <AdminContentTable>[
     titleField: 'name',
     createValues: {
       'name': '',
+      'slug': '',
       'description': '',
       'sort_order': 0,
       'is_published': false,
@@ -180,28 +183,28 @@ const adminContentTables = <AdminContentTable>[
     table: 'banners',
     label: 'Home banners',
     titleField: 'title',
-    description: 'Home-page campaign content and visibility.',
+    description: 'Home campaigns. Use an HTTPS image URL and an app path such as /services. Optional dates control visibility.',
     createValues: {
       'title': '',
-      'subtitle': '',
-      'image_url': '',
-      'action_label': '',
-      'action_deep_link': '',
+      'body': '',
+      'image_path': '',
+      'target_path': '',
+      'starts_at': null,
+      'ends_at': null,
       'sort_order': 0,
-      'is_active': false,
+      'is_published': false,
     },
   ),
   AdminContentTable(
     key: 'app-content',
     table: 'app_content',
     label: 'App content',
-    titleField: 'key',
-    description: 'Localized, editable text sections and in-app content.',
+    titleField: 'content_key',
+    description: 'Legal pages: use privacy_policy or service_terms as the content key, with body JSON containing a text field.',
     createValues: {
-      'key': '',
-      'language_code': 'en',
+      'content_key': '',
       'title': '',
-      'body': '',
+      'body': <String, dynamic>{},
       'is_published': false,
     },
   ),
@@ -433,9 +436,11 @@ class AdminRepository {
   }
 }
 
-final adminRepositoryProvider = Provider<AdminRepository>(
-  (ref) => AdminRepository(ref.watch(supabaseClientProvider)),
-);
+final adminRepositoryProvider = Provider<AdminRepository>((ref) {
+  // Drop in-memory private reads when the authenticated account changes.
+  ref.watch(authUserProvider.select((state) => state.value?.id));
+  return AdminRepository(ref.watch(supabaseClientProvider));
+});
 
 final adminContentRowsProvider =
     FutureProvider.family<List<Map<String, dynamic>>, String>((ref, key) {

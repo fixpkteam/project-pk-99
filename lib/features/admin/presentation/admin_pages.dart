@@ -11,6 +11,11 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/components.dart';
 import '../../care/data/care_repository.dart';
 import '../data/admin_repository.dart';
+import '../../care/data/public_content_repository.dart';
+import '../../foundation/presentation/home_campaigns.dart';
+import '../../catalogue/data/catalogue_repository.dart';
+import '../../services/data/services_repository.dart';
+import '../../requests/data/request_repository.dart';
 
 class AdminGate extends ConsumerWidget {
   const AdminGate({super.key, required this.child});
@@ -398,7 +403,7 @@ class _AdminContentListState extends ConsumerState<_AdminContentList> {
           // Unreferenced media can be cleaned up later.
         }
       }
-      ref.invalidate(adminContentRowsProvider(table.key));
+      _refreshPublishedContent(ref, table.key);
       if (context.mounted) {
         _showToast(context, row == null ? 'Record added.' : 'Changes saved.');
       }
@@ -475,7 +480,7 @@ class _AdminContentListState extends ConsumerState<_AdminContentList> {
       await ref
           .read(adminRepositoryProvider)
           .deleteRow(table, id, objectPath: row['object_path']?.toString());
-      ref.invalidate(adminContentRowsProvider(table.key));
+      _refreshPublishedContent(ref, table.key);
       if (context.mounted) _showToast(context, 'Record deleted.');
     } on Object {
       if (context.mounted) {
@@ -820,6 +825,7 @@ bool _requiredField(String key) => const {
   'question',
   'label',
   'key',
+  'content_key',
   'slug',
   'category_id',
   'service_id',
@@ -1168,4 +1174,16 @@ void _showToast(BuildContext context, String message) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(SnackBar(content: Text(message)));
+}
+
+void _refreshPublishedContent(WidgetRef ref, String tableKey) {
+  ref.invalidate(adminContentRowsProvider(tableKey));
+  ref.invalidate(adminReferenceRowsProvider);
+  ref.invalidate(serviceCatalogueProvider);
+  ref.invalidate(serviceQuestionsProvider);
+  ref.invalidate(productCatalogueProvider);
+  ref.invalidate(projectCatalogueProvider);
+  ref.invalidate(faqListProvider);
+  ref.invalidate(legalContentProvider);
+  ref.invalidate(homeCampaignsProvider);
 }

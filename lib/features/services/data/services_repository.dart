@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../app/providers.dart';
+import '../../../core/storage/read_cache.dart';
 
 class ServiceCategory {
   const ServiceCategory({
@@ -62,30 +63,51 @@ int _int(Object? value) =>
 
 /// Reads only published catalogue rows; the database remains the source of truth.
 class ServicesRepository {
-  const ServicesRepository(this._client);
+  const ServicesRepository(this._client, this._cache);
   final SupabaseClient _client;
+  final ReadCache _cache;
 
-  Future<ServiceCatalogue> fetchCatalogue() async {
-    final categoryRows = await _client.from('service_categories').select();
-    final serviceRows = await _client.from('services').select();
-    final categories =
-        _activeRows(categoryRows)
-            .map(ServiceCategory.fromRow)
-            .where((item) => item.id.isNotEmpty)
-            .toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    final categoryIds = categories.map((item) => item.id).toSet();
-    final services =
-        _activeRows(serviceRows)
-            .map(ServiceItem.fromRow)
-            .where(
-              (item) =>
-                  item.id.isNotEmpty && categoryIds.contains(item.categoryId),
-            )
-            .toList()
-          ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
-    return ServiceCatalogue(categories: categories, services: services);
-  }
+  Stream<ServiceCatalogue> watchCatalogue() => _cache.watch(
+    'services.v1',
+    () async {
+      // Independent reads run together; unpublished rows never reach the client.
+      return Future.wait([
+        _client
+            .from('service_categories')
+            .select('id,name,description,icon_name,sort_order')
+            .eq('is_published', true)
+            .order('sort_order')
+            .order('id'),
+        _client
+            .from('services')
+            .select('id,category_id,name,description,sort_order')
+            .eq('is_published', true)
+            .order('sort_order')
+            .order('id'),
+      ]);
+    },
+    (data) {
+      final categoryRows = (data as List)[0] as List;
+      final serviceRows = data[1] as List;
+      final categories =
+          _activeRows(categoryRows)
+              .map(ServiceCategory.fromRow)
+              .where((item) => item.id.isNotEmpty)
+              .toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      final categoryIds = categories.map((item) => item.id).toSet();
+      final services =
+          _activeRows(serviceRows)
+              .map(ServiceItem.fromRow)
+              .where(
+                (item) =>
+                    item.id.isNotEmpty && categoryIds.contains(item.categoryId),
+              )
+              .toList()
+            ..sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
+      return ServiceCatalogue(categories: categories, services: services);
+    },
+  );
 
   static List<Map<String, dynamic>> _activeRows(List<dynamic> rows) =>
       rows.whereType<Map<String, dynamic>>().where((row) {
@@ -98,9 +120,12 @@ class ServicesRepository {
 }
 
 final servicesRepositoryProvider = Provider<ServicesRepository>((ref) {
-  return ServicesRepository(ref.watch(supabaseClientProvider));
+  return ServicesRepository(
+    ref.watch(supabaseClientProvider),
+    ref.watch(readCacheProvider),
+  );
 });
 
-final serviceCatalogueProvider = FutureProvider<ServiceCatalogue>((ref) {
-  return ref.watch(servicesRepositoryProvider).fetchCatalogue();
+final serviceCatalogueProvider = StreamProvider<ServiceCatalogue>((ref) {
+  return ref.watch(servicesRepositoryProvider).watchCatalogue();
 });

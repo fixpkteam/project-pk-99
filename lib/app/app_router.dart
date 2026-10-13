@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'providers.dart';
+import '../features/auth/presentation/reset_password_page.dart';
 
 import '../core/widgets/components.dart';
 import '../features/foundation/presentation/component_gallery.dart';
@@ -28,9 +32,15 @@ import '../features/requests/data/request_repository.dart';
 import '../features/requests/presentation/addresses_page.dart';
 import '../features/requests/presentation/request_pages.dart';
 import '../features/requests/presentation/request_wizard_page.dart';
+import '../features/requests/presentation/pending_requests_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final router = createRouter();
+  ref.listen(authEventsProvider, (before, after) {
+    if (after.value?.event == AuthChangeEvent.passwordRecovery) {
+      router.go('/reset-password');
+    }
+  });
   ref.onDispose(router.dispose);
   return router;
 });
@@ -39,6 +49,10 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
   initialLocation: initialLocation,
   routes: [
     GoRoute(path: '/', redirect: (context, state) => '/home'),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) => const ResetPasswordPage(),
+    ),
     GoRoute(
       path: '/sign-in',
       builder: (context, state) =>
@@ -57,6 +71,10 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
         serviceId: state.uri.queryParameters['serviceId'] ?? '',
         enquiryContext: state.uri.queryParameters['context'],
       ),
+    ),
+    GoRoute(
+      path: '/requests/pending',
+      builder: (context, state) => const PendingRequestsPage(),
     ),
     GoRoute(
       path: '/requests/:requestId',

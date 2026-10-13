@@ -1,4 +1,7 @@
 import 'dart:typed_data';
+import 'dart:async';
+
+import 'package:uuid/uuid.dart';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +12,8 @@ import '../../../app/providers.dart';
 import '../../../core/widgets/components.dart';
 import '../../services/data/services_repository.dart';
 import '../data/request_repository.dart';
+import '../data/request_outbox.dart';
+import '../data/outbox_providers.dart';
 
 class RequestWizardPage extends ConsumerStatefulWidget {
   const RequestWizardPage({
@@ -32,6 +37,7 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
   TimeOfDay? _preferredTime;
   int _step = 0;
   bool _submitting = false;
+  final _submissionId = const Uuid().v4();
   bool _questionsLoaded = false;
 
   @override
@@ -63,7 +69,18 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
     List<ServiceQuestion> questions,
     List<CustomerAddress> addresses,
   ) {
+    if (_submitting) return;
     if (_step == 0) {
+      final invalidNumber = questions.where(
+        (q) =>
+            q.inputType == 'number' &&
+            !_missingAnswer(_answers[q.id]) &&
+            num.tryParse('${_answers[q.id]}') == null,
+      );
+      if (invalidNumber.isNotEmpty) {
+        _showMessage('Enter a valid number for ${invalidNumber.first.label}.');
+        return;
+      }
       final missing = questions.where(
         (question) =>
             question.required && _missingAnswer(_answers[question.id]),
@@ -129,8 +146,8 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
           );
           return;
         }
-        if (size > 10 * 1024 * 1024) {
-          _showMessage('${file.name} is larger than the 10 MB limit.');
+        if (size > 5 * 1024 * 1024) {
+          _showMessage('${file.name} is larger than the 5 MB limit.');
           return;
         }
         additions.add(
@@ -140,6 +157,15 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
             byteSize: size,
           ),
         );
+      }
+      if (!mounted) return;
+      final total = [
+        ..._files,
+        ...additions,
+      ].fold<int>(0, (sum, f) => sum + f.byteSize);
+      if (total > 20 * 1024 * 1024) {
+        _showMessage('Keep attachments under 20 MB in total.');
+        return;
       }
       setState(() => _files = [..._files, ...additions]);
     } on Object {
@@ -164,57 +190,63 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
   }
 
   Future<void> _submit(List<ServiceQuestion> questions) async {
+    if (_submitting) return;
     final user = ref.read(authUserProvider).value;
     if (user == null || _addressId == null) return;
     setState(() => _submitting = true);
     try {
-      final answers = <ServiceQuestion, dynamic>{};
-      for (final question in questions) {
-        final value = _answers[question.id];
-        if (!_missingAnswer(value)) answers[question] = value;
-      }
-      final schedule = _preferredDate == null
-          ? null
-          : DateTime(
-              _preferredDate!.year,
-              _preferredDate!.month,
-              _preferredDate!.day,
-              _preferredTime?.hour ?? 9,
-              _preferredTime?.minute ?? 0,
-            );
-      final requestId = await ref
-          .read(requestRepositoryProvider)
-          .submitRequest(
-            profileId: user.id,
-            serviceId: widget.serviceId,
-            addressId: _addressId!,
-            answers: answers,
-            attachments: _files
-                .map(
-                  (file) => PickedAttachment(
-                    name: file.name,
-                    bytes: file.bytes,
-                    contentType: _contentType(file.name),
-                    byteSize: file.byteSize,
-                  ),
-                )
-                .toList(),
-            customerNotes: _notes.text,
-            preferredAt: schedule,
-          );
-      ref.invalidate(customerRequestsProvider(user.id));
-      if (mounted) context.go('/requests/$requestId');
-    } on PartialRequestSubmissionException catch (error) {
-      ref.invalidate(customerRequestsProvider(user.id));
-      if (mounted) {
-        context.go('/requests/${error.requestId}');
-        _showMessage(
-          'Your request was created, but some details or files did not save. Contact FixPK before submitting it again.',
+      final files = <OutboxFile>[];
+      final bytes = <String, Uint8List>{};
+      for (final file in _files) {
+        final id = const Uuid().v4();
+        files.add(
+          OutboxFile(
+            id: id,
+            name: file.name,
+            contentType: _contentType(file.name),
+            size: file.bytes.length,
+          ),
         );
+        bytes[id] = file.bytes;
+      }
+      final date = _preferredDate;
+      final time = _preferredTime;
+      final catalogue = ref.read(serviceCatalogueProvider).value;
+      final names = catalogue?.services.where((s) => s.id == widget.serviceId);
+      final request = QueuedRequest(
+        id: _submissionId,
+        ownerId: user.id,
+        serviceId: widget.serviceId,
+        serviceName: names?.isNotEmpty == true
+            ? names!.first.name
+            : 'Quote request',
+        addressId: _addressId!,
+        notes: _notes.text.trim(),
+        answers: {
+          for (final question in questions)
+            if (!_missingAnswer(_answers[question.id]))
+              question.id: _answers[question.id],
+        },
+        createdAt: DateTime.now().toUtc(),
+        files: files,
+        preferredDate: date == null
+            ? null
+            : '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+        preferredTime: date == null
+            ? null
+            : '${(time?.hour ?? 9).toString().padLeft(2, '0')}:${(time?.minute ?? 0).toString().padLeft(2, '0')}:00',
+      );
+      final outbox = ref.read(requestOutboxProvider);
+      await outbox.enqueue(request, bytes);
+      // Acknowledgement depends only on durable device storage, not the network.
+      unawaited(outbox.sync(force: true).catchError((Object _) {}));
+      if (mounted) {
+        context.go('/requests/pending');
+        _showMessage(offlineRequestMessage);
       }
     } on Object {
       _showMessage(
-        'Your request could not be completed. Check your connection and try again.',
+        'Your request could not be saved on this device. Check free storage and pending requests, then try again. Your form is still here.',
       );
     } finally {
       if (mounted) setState(() => _submitting = false);
@@ -229,7 +261,7 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
       firstDate: today,
       lastDate: DateTime(today.year + 1, today.month, today.day),
     );
-    if (value != null) setState(() => _preferredDate = value);
+    if (value != null && mounted) setState(() => _preferredDate = value);
   }
 
   void _showMessage(String message) {
@@ -251,7 +283,7 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
         data: (user) {
           if (user == null) {
             final redirect = Uri.encodeComponent(
-              '/requests/new?serviceId=${Uri.encodeComponent(widget.serviceId)}',
+              '/requests/new?serviceId=${Uri.encodeComponent(widget.serviceId)}${widget.enquiryContext == null ? '' : '&context=${Uri.encodeQueryComponent(widget.enquiryContext!)}'}',
             );
             return AppStatePanel(
               title: 'Sign in to request a service',
@@ -323,7 +355,7 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
   ) => Stepper(
     currentStep: _step,
     onStepTapped: (step) {
-      if (step <= _step) setState(() => _step = step);
+      if (!_submitting && step <= _step) setState(() => _step = step);
     },
     onStepContinue: () => _continue(questions, addresses),
     onStepCancel: _step == 0 ? null : () => setState(() => _step--),
@@ -333,15 +365,20 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
         children: [
           Expanded(
             child: AppButton(
-              label: _step == 4 ? 'Submit request' : 'Continue',
-              busy: _submitting,
-              onPressed: _submitting ? null : details.onStepContinue,
+              key: ValueKey('request-continue-${details.stepIndex}'),
+              label: details.stepIndex == 4 ? 'Submit request' : 'Continue',
+              busy: details.isActive && _submitting,
+              onPressed: _submitting || !details.isActive
+                  ? null
+                  : details.onStepContinue,
             ),
           ),
-          if (_step > 0) ...[
+          if (details.stepIndex > 0) ...[
             const SizedBox(width: 12),
             TextButton(
-              onPressed: _submitting ? null : details.onStepCancel,
+              onPressed: _submitting || !details.isActive
+                  ? null
+                  : details.onStepCancel,
               child: const Text('Back'),
             ),
           ],
@@ -400,6 +437,7 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
         controller: _notes,
         minLines: 3,
         maxLines: 5,
+        maxLength: 5000,
         textCapitalization: TextCapitalization.sentences,
         decoration: const InputDecoration(
           labelText: 'Additional notes (optional)',
@@ -468,10 +506,13 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
           ],
         );
       case 'boolean':
-        return SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          title: Text(label),
-          value: value as bool? ?? false,
+        return DropdownButtonFormField<bool>(
+          initialValue: value as bool?,
+          decoration: InputDecoration(labelText: label),
+          items: const [
+            DropdownMenuItem(value: true, child: Text('Yes')),
+            DropdownMenuItem(value: false, child: Text('No')),
+          ],
           onChanged: (answer) => setState(() => _answers[question.id] = answer),
         );
       case 'date':
@@ -488,7 +529,7 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
               firstDate: DateTime(today.year - 10),
               lastDate: DateTime(today.year + 10),
             );
-            if (picked != null) {
+            if (picked != null && mounted) {
               setState(
                 () => _answers[question.id] =
                     '${picked.year.toString().padLeft(4, '0')}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}',
@@ -510,7 +551,7 @@ class _RequestWizardPageState extends ConsumerState<RequestWizardPage> {
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
       const Text(
-        'Attach up to 5 photos or documents. Each file must be 10 MB or smaller.',
+        'Attach up to 5 photos or documents, up to 5 MB each and 20 MB in total.',
       ),
       const SizedBox(height: 12),
       OutlinedButton.icon(

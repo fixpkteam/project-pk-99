@@ -304,22 +304,39 @@ class RequestsPage extends ConsumerWidget {
         }
         final requests = ref.watch(customerRequestsProvider(user.id));
         final catalogue = ref.watch(serviceCatalogueProvider);
-        return requests.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, _) => AppStatePanel(
-            title: 'Requests could not load',
-            message: 'Check your connection and try again.',
-            isError: true,
-            actionLabel: 'Retry',
-            onAction: () => ref.invalidate(customerRequestsProvider(user.id)),
-          ),
-          data: (items) => catalogue.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (_, _) => _requestList(context, ref, items, const {}),
-            data: (services) => _requestList(context, ref, items, {
-              for (final service in services.services) service.id: service.name,
-            }),
-          ),
+        return Column(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.cloud_upload_outlined),
+              title: const Text('Saved quote requests'),
+              subtitle: const Text(
+                'Check requests waiting to send. Saved details may be out of date while offline.',
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push('/requests/pending'),
+            ),
+            Expanded(
+              child: requests.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (_, _) => AppStatePanel(
+                  title: 'Requests could not load',
+                  message: 'Check your connection and try again.',
+                  isError: true,
+                  actionLabel: 'Retry',
+                  onAction: () =>
+                      ref.invalidate(customerRequestsProvider(user.id)),
+                ),
+                data: (items) => catalogue.when(
+                  loading: () => _requestList(context, ref, items, const {}),
+                  error: (_, _) => _requestList(context, ref, items, const {}),
+                  data: (services) => _requestList(context, ref, items, {
+                    for (final service in services.services)
+                      service.id: service.name,
+                  }),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -346,6 +363,7 @@ class RequestsPage extends ConsumerWidget {
         if (user != null) ref.invalidate(customerRequestsProvider(user.id));
       },
       child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
         itemCount: requests.length,
         separatorBuilder: (_, _) => const SizedBox(height: 12),

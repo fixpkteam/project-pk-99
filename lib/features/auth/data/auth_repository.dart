@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthRepository {
@@ -5,8 +6,10 @@ class AuthRepository {
 
   final SupabaseClient _client;
 
-  Stream<User?> get userChanges =>
-      _client.auth.onAuthStateChange.map((event) => event.session?.user);
+  Stream<User?> get userChanges async* {
+    yield _client.auth.currentUser;
+    yield* _client.auth.onAuthStateChange.map((event) => event.session?.user);
+  }
 
   User? get currentUser => _client.auth.currentUser;
 
@@ -38,7 +41,19 @@ class AuthRepository {
   }
 
   Future<void> sendPasswordReset(String email) =>
-      _client.auth.resetPasswordForEmail(email.trim());
+      _client.auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: kIsWeb
+            ? Uri.base.replace(path: '/', query: '', fragment: '').toString()
+            : 'com.fixpk.fixpk://login-callback/',
+      );
+
+  Future<void> updatePassword(String password) async {
+    if (_client.auth.currentUser == null) {
+      throw const AuthException('Open a valid password reset link first.');
+    }
+    await _client.auth.updateUser(UserAttributes(password: password));
+  }
 
   Future<void> updateProfile({
     required String name,

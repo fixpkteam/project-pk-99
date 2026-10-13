@@ -35,7 +35,12 @@ void main() {
     final router = createRouter(initialLocation: '/unavailable/123');
     addTearDown(router.dispose);
     await tester.pumpWidget(
-      MaterialApp.router(theme: FixPkTheme.light, routerConfig: router),
+      ProviderScope(
+        child: MaterialApp.router(
+          theme: FixPkTheme.light,
+          routerConfig: router,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
     expect(find.text('This page is unavailable'), findsOneWidget);

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'providers.dart';
 import '../features/auth/presentation/reset_password_page.dart';
+import '../features/onboarding/presentation/onboarding_page.dart';
 
 import '../core/widgets/components.dart';
 import '../features/foundation/presentation/component_gallery.dart';
@@ -35,7 +36,9 @@ import '../features/requests/presentation/request_wizard_page.dart';
 import '../features/requests/presentation/pending_requests_page.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
-  final router = createRouter();
+  final router = createRouter(
+    initialLocation: ref.read(startupRouteProvider).requireValue,
+  );
   ref.listen(authEventsProvider, (before, after) {
     if (after.value?.event == AuthChangeEvent.passwordRecovery) {
       router.go('/reset-password');
@@ -49,6 +52,10 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
   initialLocation: initialLocation,
   routes: [
     GoRoute(path: '/', redirect: (context, state) => '/home'),
+    GoRoute(
+      path: '/welcome',
+      builder: (context, state) => const OnboardingPage(),
+    ),
     GoRoute(
       path: '/reset-password',
       builder: (context, state) => const ResetPasswordPage(),

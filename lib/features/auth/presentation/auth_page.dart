@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../app/providers.dart';
 import '../../../core/widgets/components.dart';
 import '../../care/data/care_repository.dart';
+import 'location_fields.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
   const AuthPage({super.key, this.createAccount = false, this.redirectTo});
@@ -22,6 +23,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   final _phone = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _country = TextEditingController(text: 'Pakistan');
+  final _city = TextEditingController();
   bool _busy = false;
   bool _showPassword = false;
 
@@ -42,6 +45,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     _phone.dispose();
     _email.dispose();
     _password.dispose();
+    _country.dispose();
+    _city.dispose();
     super.dispose();
   }
 
@@ -49,6 +54,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       value == null || value.trim().isEmpty ? 'Enter your $label.' : null;
 
   Future<void> _submit() async {
+    if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
     final config = ref.read(configProvider);
     if (config.preview) {
@@ -64,7 +70,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           phone: _phone.text,
           email: _email.text,
           password: _password.text,
+          country: _country.text,
+          city: _city.text,
         );
+        await _rememberOnboarding();
         if (!mounted) return;
         if (response.session == null) {
           _message('Check your email to confirm your FixPK account.');
@@ -75,6 +84,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         }
       } else {
         await repository.signIn(email: _email.text, password: _password.text);
+        await _rememberOnboarding();
         if (!mounted) return;
         ref.invalidate(authUserProvider);
         context.go(_destination);
@@ -87,6 +97,18 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       );
     } finally {
       if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _rememberOnboarding() async {
+    if (!mounted) return;
+    try {
+      await ref
+          .read(preferencesProvider)
+          .setOnboardingCompleted(completed: true);
+    } on Object {
+      // A successful sign-in must not be reported as failed because a local
+      // preference write failed. The restored session also skips onboarding.
     }
   }
 
@@ -150,7 +172,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                 const SizedBox(height: 8),
                 Text(
                   creating
-                      ? 'Create an account to manage requests, quotes and appointments.'
+                      ? 'Tell us a little about yourself to get started with FixPK.'
                       : 'Sign in to view and manage your FixPK service requests.',
                 ),
                 const SizedBox(height: 24),
@@ -160,6 +182,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     children: [
                       if (creating) ...[
                         TextFormField(
+                          key: const ValueKey('auth-name'),
                           controller: _name,
                           textCapitalization: TextCapitalization.words,
                           decoration: const InputDecoration(
@@ -169,6 +192,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         ),
                         const SizedBox(height: 14),
                         TextFormField(
+                          key: const ValueKey('auth-phone'),
                           controller: _phone,
                           keyboardType: TextInputType.phone,
                           decoration: const InputDecoration(
@@ -178,8 +202,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                               _required(value, 'phone number'),
                         ),
                         const SizedBox(height: 14),
+                        LocationFields(
+                          country: _country,
+                          city: _city,
+                          enabled: !_busy,
+                        ),
+                        const SizedBox(height: 14),
                       ],
                       TextFormField(
+                        key: const ValueKey('auth-email'),
                         controller: _email,
                         keyboardType: TextInputType.emailAddress,
                         autofillHints: const [AutofillHints.email],
@@ -195,6 +226,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       ),
                       const SizedBox(height: 14),
                       TextFormField(
+                        key: const ValueKey('auth-password'),
                         controller: _password,
                         obscureText: !_showPassword,
                         autofillHints: [
@@ -444,6 +476,16 @@ class AccountPage extends ConsumerWidget {
                             const SizedBox(height: 4),
                             Text('${metadata['phone']}'),
                           ],
+                          if ('${metadata['city'] ?? ''}'.isNotEmpty ||
+                              '${metadata['country'] ?? ''}'.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              [metadata['city'], metadata['country']]
+                                  .whereType<String>()
+                                  .where((value) => value.trim().isNotEmpty)
+                                  .join(', '),
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -559,34 +601,47 @@ class AccountPage extends ConsumerWidget {
     final phoneController = TextEditingController(
       text: '${user.userMetadata?['phone'] ?? ''}',
     );
+    final countryController = TextEditingController(
+      text: '${user.userMetadata?['country'] ?? 'Pakistan'}',
+    );
+    final cityController = TextEditingController(
+      text: '${user.userMetadata?['city'] ?? ''}',
+    );
     final formKey = GlobalKey<FormState>();
     final save = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('Edit profile'),
-        content: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: nameController,
-                textCapitalization: TextCapitalization.words,
-                decoration: const InputDecoration(labelText: 'Full name'),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Enter your name.'
-                    : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: 'Phone number'),
-                validator: (value) => value == null || value.trim().isEmpty
-                    ? 'Enter your phone number.'
-                    : null,
-              ),
-            ],
+        content: SingleChildScrollView(
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(labelText: 'Full name'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Enter your name.'
+                      : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: phoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: 'Phone number'),
+                  validator: (value) => value == null || value.trim().isEmpty
+                      ? 'Enter your phone number.'
+                      : null,
+                ),
+                const SizedBox(height: 14),
+                LocationFields(
+                  country: countryController,
+                  city: cityController,
+                ),
+              ],
+            ),
           ),
         ),
         actions: [
@@ -595,8 +650,11 @@ class AccountPage extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            onPressed: () =>
-                Navigator.pop(dialogContext, formKey.currentState!.validate()),
+            onPressed: () {
+              if (formKey.currentState!.validate()) {
+                Navigator.pop(dialogContext, true);
+              }
+            },
             child: const Text('Save'),
           ),
         ],
@@ -609,6 +667,8 @@ class AccountPage extends ConsumerWidget {
             .updateProfile(
               name: nameController.text,
               phone: phoneController.text,
+              country: countryController.text,
+              city: cityController.text,
             );
         ref.invalidate(authUserProvider);
         if (context.mounted) {
@@ -629,5 +689,7 @@ class AccountPage extends ConsumerWidget {
     }
     nameController.dispose();
     phoneController.dispose();
+    countryController.dispose();
+    cityController.dispose();
   }
 }

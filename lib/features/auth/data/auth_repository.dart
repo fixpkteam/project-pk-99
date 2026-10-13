@@ -27,11 +27,18 @@ class AuthRepository {
     required String phone,
     required String email,
     required String password,
+    required String country,
+    required String city,
   }) async {
     final response = await _client.auth.signUp(
       email: email.trim(),
       password: password,
-      data: {'full_name': name.trim(), 'phone': phone.trim()},
+      data: {
+        'full_name': name.trim(),
+        'phone': phone.trim(),
+        'country': country.trim(),
+        'city': city.trim(),
+      },
     );
     final user = response.user;
     if (response.session != null && user != null) {
@@ -58,9 +65,18 @@ class AuthRepository {
   Future<void> updateProfile({
     required String name,
     required String phone,
+    required String country,
+    required String city,
   }) async {
     await _client.auth.updateUser(
-      UserAttributes(data: {'full_name': name.trim(), 'phone': phone.trim()}),
+      UserAttributes(
+        data: {
+          'full_name': name.trim(),
+          'phone': phone.trim(),
+          'country': country.trim(),
+          'city': city.trim(),
+        },
+      ),
     );
     final user = _client.auth.currentUser;
     if (user == null) return;

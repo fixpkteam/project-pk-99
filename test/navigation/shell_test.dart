@@ -9,11 +9,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../helpers/memory_preferences.dart';
+
 void main() {
   testWidgets('tabs preserve service search and navigate without a backend', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FixPkApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [startupRouteProvider.overrideWith((ref) async => '/home')],
+        child: const FixPkApp(),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
     await tester.tap(find.byType(NavigationDestination).at(1));
@@ -52,7 +59,12 @@ void main() {
   testWidgets('product and project routes have useful preview states', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FixPkApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [startupRouteProvider.overrideWith((ref) async => '/home')],
+        child: const FixPkApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     await tester.drag(find.byType(Scrollable).first, const Offset(0, -700));
@@ -152,6 +164,9 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
+          preferencesProvider.overrideWithValue(
+            MemoryPreferences(completed: true),
+          ),
           configProvider.overrideWith((ref) {
             attempts++;
             if (attempts == 1) {
@@ -173,7 +188,7 @@ void main() {
     expect(attempts, greaterThan(0));
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
-    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
+    expect(find.text('Welcome back'), findsOneWidget);
   });
   testWidgets('connected mode initializes Supabase before showing the app', (
     tester,
@@ -191,6 +206,11 @@ void main() {
               supabasePublishableKey: 'sb_publishable_test',
             ),
           ),
+          preferencesProvider.overrideWithValue(
+            MemoryPreferences(completed: true),
+          ),
+          authUserProvider.overrideWith((ref) => Stream.value(null)),
+          restoredUserProvider.overrideWithValue(null),
           backendInitializerProvider.overrideWithValue((config) async {
             initializedUrl = config.supabaseUrl;
             initializedKey = config.supabasePublishableKey;
@@ -200,7 +220,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
+    expect(find.text('Welcome back'), findsOneWidget);
     expect(initializedUrl, 'https://example.supabase.co');
     expect(initializedKey, 'sb_publishable_test');
   });
@@ -208,7 +228,12 @@ void main() {
   testWidgets('guest can reach account creation and sees preview guidance', (
     tester,
   ) async {
-    await tester.pumpWidget(const ProviderScope(child: FixPkApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [startupRouteProvider.overrideWith((ref) async => '/home')],
+        child: const FixPkApp(),
+      ),
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byType(NavigationDestination).at(4));
     await tester.pumpAndSettle();
@@ -216,14 +241,38 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Join FixPK'), findsOneWidget);
-    await tester.enterText(find.byType(TextFormField).at(0), 'Aamir Hassan');
-    await tester.enterText(find.byType(TextFormField).at(1), '+923001234567');
     await tester.enterText(
-      find.byType(TextFormField).at(2),
+      find.byKey(const ValueKey('auth-name')),
+      'Aamir Hassan',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-phone')),
+      '+923001234567',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-email')),
       'aamir@example.com',
     );
-    await tester.enterText(find.byType(TextFormField).at(3), 'safe-pass-123');
-    await tester.drag(find.byType(ListView).last, const Offset(0, -280));
+    await tester.enterText(
+      find.byKey(const ValueKey('auth-password')),
+      'safe-pass-123',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('account-city')),
+      'Islamabad',
+    );
+    await tester.scrollUntilVisible(
+      find.widgetWithText(FilledButton, 'Create account'),
+      250,
+      scrollable: find
+          .byWidgetPredicate(
+            (widget) =>
+                widget is Scrollable &&
+                widget.axisDirection == AxisDirection.down,
+          )
+          .last,
+    );
+    await tester.drag(find.byType(ListView).last, const Offset(0, -100));
     await tester.pumpAndSettle();
     await tester.tap(find.widgetWithText(FilledButton, 'Create account'));
     await tester.pumpAndSettle();

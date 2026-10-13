@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -69,6 +71,13 @@ final authEventsProvider = StreamProvider<AuthState>((ref) {
   return ref.watch(supabaseClientProvider).auth.onAuthStateChange;
 });
 
+/// Read after bootstrap. Supabase has restored its locally persisted session
+/// by then; startup does not need to wait for a network or auth-stream event.
+final restoredUserProvider = Provider<User?>((ref) {
+  if (ref.watch(configProvider).preview) return null;
+  return ref.watch(authRepositoryProvider).currentUser;
+});
+
 final bootstrapProvider = FutureProvider<AppConfig>((ref) async {
   final logger = ref.read(loggerProvider);
   logger.record(AppEvent.bootstrapStarted);
@@ -84,4 +93,24 @@ final bootstrapProvider = FutureProvider<AppConfig>((ref) async {
     logger.record(AppEvent.bootstrapFailed);
     rethrow;
   }
+}, retry: (count, error) => null);
+
+/// Resolve the ordinary launch once, after Supabase restores its local session.
+/// Auth events keep updating the app without recreating its navigation stack.
+final startupRouteProvider = FutureProvider<String>((ref) async {
+  await ref.watch(bootstrapProvider.future);
+  final user = ref.read(restoredUserProvider);
+  final preferences = ref.read(preferencesProvider);
+  if (user != null) {
+    // Remember upgraded installations too, so signing out later does not
+    // reintroduce an existing customer. This write does not delay Home.
+    unawaited(
+      preferences
+          .setOnboardingCompleted(completed: true)
+          .catchError((Object _) {}),
+    );
+    return '/home';
+  }
+  final completed = await preferences.getOnboardingCompleted();
+  return completed ? '/sign-in' : '/welcome';
 }, retry: (count, error) => null);

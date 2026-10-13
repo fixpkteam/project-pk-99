@@ -2,22 +2,55 @@ import 'dart:async';
 import 'dart:typed_data';
 
 import 'package:fixpk/core/storage/device_store.dart';
+import 'package:fixpk/core/storage/app_storage.dart';
+import 'package:fixpk/app/providers.dart';
+import 'package:fixpk/app/fixpk_app.dart';
 import 'package:fixpk/features/requests/data/request_outbox.dart';
 import 'package:fixpk/main.dart' as app;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('installed app starts and all main tabs remain navigable', (
+  testWidgets('native first launch remembers the introduction after restart', (
     tester,
   ) async {
+    final preferences = LocalPreferencesStore(SharedPreferencesAsync());
+    await preferences.setOnboardingCompleted(completed: false);
     final errorHandler = FlutterError.onError;
     app.main();
     FlutterError.onError = errorHandler;
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome to FixPK'), findsOneWidget);
+    for (var page = 0; page < 3; page++) {
+      await tester.tap(find.byKey(const ValueKey('onboarding-next')));
+      await tester.pumpAndSettle();
+    }
+    expect(find.text('Join FixPK'), findsOneWidget);
+    expect(await preferences.getOnboardingCompleted(), isTrue);
+    await tester.pumpWidget(const SizedBox.shrink());
+    app.main();
+    FlutterError.onError = errorHandler;
+    await tester.pumpAndSettle();
+    expect(find.text('Welcome back'), findsOneWidget);
+    expect(find.text('Get started'), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('installed Home and all main tabs remain navigable', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [startupRouteProvider.overrideWith((ref) async => '/home')],
+        child: const FixPkApp(),
+      ),
+    );
     await tester.pumpAndSettle();
     expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
     for (final index in [1, 2, 3, 4, 0]) {

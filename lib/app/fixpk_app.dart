@@ -11,7 +11,7 @@ class FixPkApp extends ConsumerWidget {
   const FixPkApp({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final startup = ref.watch(bootstrapProvider);
+    final startup = ref.watch(startupRouteProvider);
     return startup.when(
       data: (_) => MaterialApp.router(
         builder: (context, child) =>
@@ -42,13 +42,14 @@ class FixPkApp extends ConsumerWidget {
             child: SingleChildScrollView(
               child: AppStatePanel(
                 title: 'FixPK could not start',
-                message: 'Check the connection settings and try again.',
+                message: 'We could not restore your app settings. Try again.',
                 icon: Icons.cloud_off_outlined,
                 isError: true,
                 actionLabel: 'Retry',
                 onAction: () {
                   ref.invalidate(configProvider);
                   ref.invalidate(bootstrapProvider);
+                  ref.invalidate(startupRouteProvider);
                 },
               ),
             ),

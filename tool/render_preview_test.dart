@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:fixpk/app/fixpk_app.dart';
+import 'package:fixpk/app/providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,8 +32,12 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
     await tester.pumpWidget(
-      const ProviderScope(
-        child: RepaintBoundary(key: ValueKey('preview'), child: FixPkApp()),
+      ProviderScope(
+        overrides: [startupRouteProvider.overrideWith((ref) async => '/home')],
+        child: const RepaintBoundary(
+          key: ValueKey('preview'),
+          child: FixPkApp(),
+        ),
       ),
     );
     await tester.pumpAndSettle();

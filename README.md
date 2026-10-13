@@ -6,8 +6,9 @@ Flutter customer-app foundation for Android and iOS, with a web target for devel
 
 - Flutter **3.47.7**, bundled Dart **3.13.5**, exact direct dependency pins and a resolved lockfile.
 - Feature-based structure, Riverpod dependency injection and `go_router` indexed navigation.
+- First launch: branded welcome and two image-led introductions, then account creation. Returning signed-in users open Home; completed introductions are remembered on the device.
 - Home, searchable service catalogue, service categories/details, guest browsing, and an account entry point.
-- Supabase Auth sign-in/sign-up, password recovery and new-password screen, profile editing, and sign-out in connected mode.
+- Supabase Auth sign-in/sign-up with country/city profile fields, password recovery and new-password screen, profile editing, and sign-out in connected mode.
 - Published service categories and services load from Supabase; preview mode remains credential-free.
 - Saved address management and a dynamic five-step request form with answers, schedule preferences, and private attachment uploads.
 - Customer request history/details, site-survey requests, appointment summaries, quote line items, and secure quote decisions through PostgreSQL functions.
@@ -76,6 +77,7 @@ For a read-only health check of the configured connected development project, ru
 | `lib/core/logging/` | Enumerated, payload-free events |
 | `lib/features/foundation/presentation/` | Preview shell and component gallery |
 | `lib/features/auth/` | Supabase Auth and customer profile screens/data access |
+| `lib/features/onboarding/` | Welcome, introduction pages and completion persistence |
 | `lib/features/services/` | Service catalogue models, queries and screens |
 | `lib/features/requests/` | Saved addresses, request submission/history, surveys and quotations |
 | `lib/features/catalogue/` | Published product/project catalogue reads, media, specifications and screens |
@@ -101,3 +103,5 @@ Combined Delivery 5 validation and the limited connected Supabase smoke check ar
 ## Current launch audit
 
 See [Performance and offline launch audit](docs/PRELAUNCH_AUDIT.md) for verified changes, offline behavior, native CI coverage and remaining launch blockers. Published business content, legal/deletion flows, Auth redirect configuration, upload signing and physical-device profiling are still required.
+
+See [First launch and account location](docs/ONBOARDING.md) for the new welcome flow, returning-user behavior, saved country/city fields and verification coverage.

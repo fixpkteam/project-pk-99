@@ -16,7 +16,8 @@ Audit date: 13 October 2026. This document supersedes the older delivery status 
 | Editable public content | Home campaigns load published, scheduled banner records. Legal screens load published `privacy_policy` and `service_terms` records whose JSON body has a `text` field. Missing policies are not represented as completed policies. |
 | Password recovery | Added the new-password screen, confirmation validation, recovery-event navigation and Android/iOS callback registration. Real email/callback delivery still needs the configuration and device check below. |
 | Backend connectivity | 30 read-only API probes passed: Auth, 14 public content tables, 13 anonymous private-table denials, anonymous request-RPC denial and anonymous admin-function denial. These do not prove every authenticated mutation. |
-| Source quality | 69 unit/widget tests passed; static analysis and local web compilation passed. Native CI results must be read from the linked GitHub Actions run, not inferred from this table. |
+| Source quality | 69 unit/widget tests passed; static analysis and local/hosted web compilation passed. The local coverage report records 1,660 of 5,020 instrumented lines (33.1%); this is not exhaustive behavioral coverage. |
+| Native verification | Both integration tests passed on Android API 24 and API 36. Connected Android APKs, ARM profile APKs, an unsigned release app bundle and the iOS simulator build compiled successfully in CI. |
 
 ## Offline contract
 
@@ -33,11 +34,36 @@ Customer message:
 
 ## CI and device checks
 
-The workflow runs formatting, analyzer, unit/widget tests with coverage, web compilation, Edge Function lint/type checks, the 30-probe connected smoke check, Android debug builds and iOS simulator compilation. It also adds:
+All eight jobs passed in [GitHub Actions run 13](https://github.com/fixpkteam/project-pk-99/actions/runs/38352777489), for source commit [`5ab50cd`](https://github.com/fixpkteam/project-pk-99/commit/5ab50cd96634cfe16139deef3d0d036cffcf9d34). This documentation update does not change that tested source.
 
-1. Android API 24 and API 36 emulator integration tests for installed startup, main tabs and native durable outbox storage with a simulated disconnected/reconnected sender. They do not disable the OS network or create production customer records.
-2. ARM32/ARM64 profile APKs for physical-device profiling.
-3. A production-mode unsigned release app bundle to validate release compilation. This file cannot be uploaded as a completed signed Play release.
+| CI job | Observed result |
+|---|---|
+| `checks` | Passed formatting, static analysis, 69 unit/widget tests and web release compilation. |
+| `supabase-functions` | Passed Edge Function lint and type checks. |
+| `supabase-smoke` | All 30 live read-only/anonymous-denial probes passed. |
+| `android` | Preview and Supabase-connected debug APKs built and uploaded. |
+| `ios` | iOS simulator debug compilation passed; this was not an iOS UI test run. |
+| `android-device-tests (24)` | Two installed-app integration tests passed. |
+| `android-device-tests (36)` | The same two installed-app integration tests passed. |
+| `android-optimized` | Connected ARM32/ARM64 profile APKs and the production-mode unsigned app bundle built and uploaded. |
+
+The emulator tests verify:
+
+1. Installed startup and navigation through the five main tabs.
+2. Native durable outbox/attachment storage across fresh store instances, followed by exactly one delivery through a simulated disconnected/reconnected sender.
+
+They use preview configuration, do not disable the OS network and do not create production customer records. They therefore do not prove authenticated customer/staff journeys, real network restoration or physical-device speed.
+
+The run's **Artifacts** section contains the following downloads, available until 27 October 2026:
+
+| Artifact | Intended use |
+|---|---|
+| `fixpk-profile-apks-13` | Connected optimized profile APKs for physical Android testing. Flutter reports 32.7 MB for ARM32 and 35.0 MB for ARM64. |
+| `fixpk-connected-apk-13` | Supabase-connected debug APK for functional debugging; do not use debug timings as release performance measurements. |
+| `fixpk-debug-apk-13` | Preview-only debug build. |
+| `fixpk-unsigned-release-bundle-13` | Production-mode compilation proof; Flutter reports a 58.3 MB AAB. It still requires approved release signing before Play submission. |
+
+These are compiled file sizes, not measured installed sizes or Play download estimates. No physical phone measurements were available in this environment.
 
 Run locally with the pinned Flutter/Dart toolchain:
 

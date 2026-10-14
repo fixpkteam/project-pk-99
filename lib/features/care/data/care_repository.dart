@@ -178,10 +178,14 @@ class StaffRequestSummary {
     required this.serviceId,
     required this.status,
     required this.createdAt,
+    this.serviceName = '',
+    this.customerName = '',
   });
   final String id;
   final String reference;
   final String serviceId;
+  final String serviceName;
+  final String customerName;
   final String status;
   final DateTime? createdAt;
 
@@ -190,6 +194,8 @@ class StaffRequestSummary {
         id: '${row['id'] ?? ''}',
         reference: '${row['public_reference'] ?? row['id'] ?? ''}',
         serviceId: '${row['service_id'] ?? ''}',
+        serviceName: '${(row['services'] as Map?)?['name'] ?? ''}',
+        customerName: '${(row['profiles'] as Map?)?['full_name'] ?? ''}',
         status: '${row['status'] ?? 'submitted'}',
         createdAt: DateTime.tryParse('${row['created_at'] ?? ''}'),
       );
@@ -337,14 +343,28 @@ class CareRepository {
     return rows.map(StaffRoleRecord.fromRow).toList(growable: false);
   }
 
-  Future<List<StaffRequestSummary>> fetchStaffRequests() async {
+  Future<List<StaffRequestSummary>> fetchStaffRequests({int page = 0}) async {
     final rows = await _client
         .from('service_requests')
-        .select('id,public_reference,service_id,status,created_at')
+        .select(
+          'id,public_reference,service_id,status,created_at,services(name),profiles(full_name)',
+        )
         .order('created_at', ascending: false)
-        .limit(50);
+        .order('id')
+        .range(page * 50, page * 50 + 49);
     return rows.map(StaffRequestSummary.fromRow).toList(growable: false);
   }
+
+  Future<Map<String, dynamic>?> fetchStaffRequest(String id) => _client
+      .from('service_requests')
+      .select(
+        'id,public_reference,service_id,status,customer_notes,preferred_date,preferred_time,created_at,services(name),profiles(full_name,phone),addresses(recipient_name,phone,address_line,area,city,province),service_request_answers(answer_value,service_questions(label)),request_attachments(id,bucket_id,object_path,file_name,content_type)',
+      )
+      .eq('id', id)
+      .maybeSingle();
+
+  Future<String> staffAttachmentUrl(String path) =>
+      _client.storage.from('request-attachments').createSignedUrl(path, 600);
 
   Future<List<SupportTicketRecord>> fetchStaffTickets() async {
     final rows = await _client
@@ -447,6 +467,17 @@ final staffRoleListProvider =
 final staffRequestListProvider = FutureProvider<List<StaffRequestSummary>>(
   (ref) => ref.watch(careRepositoryProvider).fetchStaffRequests(),
 );
+
+final staffRequestPageProvider = FutureProvider.autoDispose
+    .family<List<StaffRequestSummary>, int>(
+      (ref, page) =>
+          ref.watch(careRepositoryProvider).fetchStaffRequests(page: page),
+    );
+
+final staffRequestDetailProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, String>(
+      (ref, id) => ref.watch(careRepositoryProvider).fetchStaffRequest(id),
+    );
 
 final staffTicketListProvider = FutureProvider<List<SupportTicketRecord>>(
   (ref) => ref.watch(careRepositoryProvider).fetchStaffTickets(),

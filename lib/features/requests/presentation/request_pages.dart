@@ -295,7 +295,8 @@ class RequestsPage extends ConsumerWidget {
           const target = '/requests';
           return AppStatePanel(
             title: 'Sign in to view your requests',
-            message: 'Your quotes, surveys and work updates are kept private to your account.',
+            message:
+                'Your quotes, surveys and work updates are kept private to your account.',
             icon: Icons.lock_outline,
             actionLabel: 'Sign in',
             onAction: () =>
@@ -351,7 +352,8 @@ class RequestsPage extends ConsumerWidget {
     if (requests.isEmpty) {
       return AppStatePanel(
         title: 'No requests yet',
-        message: 'Explore FixPK services and send us your requirements to get started.',
+        message:
+            'Explore FixPK services and send us your requirements to get started.',
         icon: Icons.assignment_outlined,
         actionLabel: 'Explore services',
         onAction: () => context.go('/services'),
@@ -569,34 +571,36 @@ class RequestDetailPage extends ConsumerWidget {
     ),
   );
 
-  Widget _jobSection(BuildContext context, AsyncValue<List<JobRecord>> jobs) =>
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Work tracking', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 8),
-          jobs.when(
-            loading: () => const LinearProgressIndicator(),
-            error: (_, _) => const ContentCard(
-              child: Text('Work progress is temporarily unavailable.'),
-            ),
-            data: (items) => items.isEmpty
-                ? const ContentCard(
-                    child: Text(
-                      'Job tracking will appear here after your request is approved and scheduled.',
-                    ),
-                  )
-                : Column(
-                    children: [
-                      for (final job in items) ...[
-                        _JobProgressCard(job: job),
-                        const SizedBox(height: 8),
-                      ],
-                    ],
-                  ),
-          ),
-        ],
-      );
+  Widget _jobSection(
+    BuildContext context,
+    AsyncValue<List<JobRecord>> jobs,
+  ) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Text('Work tracking', style: Theme.of(context).textTheme.titleLarge),
+      const SizedBox(height: 8),
+      jobs.when(
+        loading: () => const LinearProgressIndicator(),
+        error: (_, _) => const ContentCard(
+          child: Text('Work progress is temporarily unavailable.'),
+        ),
+        data: (items) => items.isEmpty
+            ? const ContentCard(
+                child: Text(
+                  'Job tracking will appear here after your request is approved and scheduled.',
+                ),
+              )
+            : Column(
+                children: [
+                  for (final job in items) ...[
+                    _JobProgressCard(job: job),
+                    const SizedBox(height: 8),
+                  ],
+                ],
+              ),
+      ),
+    ],
+  );
 
   Widget _surveySection(
     BuildContext context,
@@ -827,8 +831,9 @@ class _JobProgressCard extends StatelessWidget {
               complete: isCompleted,
               detail: job.completedAt == null
                   ? (isCompleted ? 'Job marked complete' : 'Not completed yet')
-                  : MaterialLocalizations.of(context)
-                        .formatMediumDate(job.completedAt!.toLocal()),
+                  : MaterialLocalizations.of(
+                      context,
+                    ).formatMediumDate(job.completedAt!.toLocal()),
               isLast: true,
             ),
             if (isCompleted) ...[

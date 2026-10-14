@@ -1,7 +1,7 @@
 name: fixpk
 description: FixPK customer application — Phase 1 foundation.
 publish_to: none
-version: 0.1.0+1
+version: 0.2.0+2
 
 environment:
   sdk: '>=3.13.5 <4.0.0'
@@ -33,4 +33,5 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
-    - assets/brand/fixpk-app-icon.png
+    - assets/brand/fixpk-logo.webp
+    - assets/service-icons/

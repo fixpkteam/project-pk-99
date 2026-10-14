@@ -41,16 +41,30 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await _decodeImages(tester);
     await expectLater(
       find.byKey(const ValueKey('preview')),
       matchesGoldenFile('../docs/previews/home.png'),
     );
     await tester.tap(find.byType(NavigationDestination).at(1));
     await tester.pumpAndSettle();
+    await _decodeImages(tester);
     await expectLater(
       find.byKey(const ValueKey('preview')),
       matchesGoldenFile('../docs/previews/services.png'),
     );
     expect(tester.takeException(), isNull);
   });
+}
+
+Future<void> _decodeImages(WidgetTester tester) async {
+  final providers = tester
+      .widgetList<Image>(find.byType(Image))
+      .map((w) => w.image)
+      .toList();
+  final context = tester.element(find.byType(FixPkApp));
+  await tester.runAsync(
+    () => Future.wait(providers.map((p) => precacheImage(p, context))),
+  );
+  await tester.pump();
 }

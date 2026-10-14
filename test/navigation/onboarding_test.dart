@@ -71,7 +71,7 @@ void main() {
   ) async {
     final preferences = MemoryPreferences()..failReads = true;
     await _launch(tester, preferences, user: _user);
-    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
+    expect(find.text('Engineering\nSolutions.'), findsOneWidget);
     expect(find.text('Get started'), findsNothing);
     expect(tester.takeException(), isNull);
     expect(preferences.completed, isTrue);

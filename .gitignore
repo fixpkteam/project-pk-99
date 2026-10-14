@@ -29,3 +29,6 @@ ios/Runner/GeneratedPluginRegistrant.*
 xcuserdata/
 **/Flutter/ephemeral/
 .fvm/
+
+# Supabase CLI local cache
+supabase/.temp/

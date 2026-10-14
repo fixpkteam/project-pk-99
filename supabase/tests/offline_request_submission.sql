@@ -3,9 +3,11 @@ begin;
 do $$
 declare
   a uuid := gen_random_uuid(); b uuid := gen_random_uuid();
+  staff_id uuid := gen_random_uuid();
   c uuid := gen_random_uuid(); s uuid := gen_random_uuid();
   addr uuid := gen_random_uuid(); q uuid := gen_random_uuid();
 begin
+  perform set_config('test.staff',staff_id::text,true);
   perform set_config('test.owner',a::text,true);
   perform set_config('test.other',b::text,true);
   perform set_config('test.service',s::text,true);
@@ -14,13 +16,17 @@ begin
   perform set_config('test.request',gen_random_uuid()::text,true);
   insert into auth.users(id, email, raw_user_meta_data, raw_app_meta_data)
   values(a,'fixpk-test-'||a||'@example.invalid','{}','{}'),
-        (b,'fixpk-test-'||b||'@example.invalid','{}','{}');
+        (b,'fixpk-test-'||b||'@example.invalid','{}','{}'),
+        (staff_id,'fixpk-test-'||staff_id||'@example.invalid','{}','{}');
+  insert into public.user_roles(user_id,role) values(staff_id,'admin');
   insert into public.service_categories(id,name,slug,is_published)
   values(c,'Transaction test','test-'||c,true);
   insert into public.services(id,category_id,name,slug,is_published)
   values(s,c,'Transaction test','test-'||s,true);
   insert into public.addresses(id,profile_id,address_line,city)
   values(addr,a,'Synthetic test address','Test');
+  insert into public.addresses(profile_id,address_line,city)
+  values(a,'Unlinked private address','Test');
   insert into public.service_questions(id,service_id,question_key,label,input_type,is_required)
   values(q,s,'capacity','Capacity','number',true);
 end $$;
@@ -54,6 +60,29 @@ begin
     raise exception 'TEST FAILED: retry duplicated or altered the request';
   end if;
 end $$;
+-- Synthetic attachment metadata checks Storage RLS without storing a real file.
+reset role;
+insert into public.request_attachments(request_id,uploaded_by,bucket_id,object_path,file_name,content_type,byte_size)
+values(current_setting('test.request')::uuid,current_setting('test.owner')::uuid,
+ 'request-attachments',current_setting('test.owner')||'/'||current_setting('test.request')||'/test.png','test.png','image/png',1);
+insert into storage.objects(bucket_id,name)
+values('request-attachments',current_setting('test.owner')||'/'||current_setting('test.request')||'/test.png');
+set local role authenticated;
+select set_config('request.jwt.claim.sub',current_setting('test.staff'),true);
+do $$
+begin
+  if not exists(select 1 from public.service_requests where id=current_setting('test.request')::uuid) or
+     not exists(select 1 from public.service_request_answers where request_id=current_setting('test.request')::uuid) or
+     not exists(select 1 from public.profiles where id=current_setting('test.owner')::uuid) or
+     not exists(select 1 from public.addresses where id=current_setting('test.address')::uuid) or
+     not exists(select 1 from public.request_attachments where request_id=current_setting('test.request')::uuid) or
+     not exists(select 1 from storage.objects where name=current_setting('test.owner')||'/'||current_setting('test.request')||'/test.png') then
+    raise exception 'TEST FAILED: admin cannot review the complete request';
+  end if;
+  if exists(select 1 from public.addresses where profile_id=current_setting('test.owner')::uuid and id<>current_setting('test.address')::uuid) then
+    raise exception 'TEST FAILED: staff can read an unlinked customer address';
+  end if;
+end $$;
 select set_config('request.jwt.claim.sub',current_setting('test.other'),true);
 do $$
 begin
@@ -69,6 +98,11 @@ begin
   if exists(select 1 from public.service_request_answers where request_id=current_setting('test.request')::uuid) then
     raise exception 'TEST FAILED: answers leaked';
   end if;
+  if exists(select 1 from public.addresses where id=current_setting('test.address')::uuid) or
+     exists(select 1 from public.request_attachments where request_id=current_setting('test.request')::uuid) or
+     exists(select 1 from storage.objects where name=current_setting('test.owner')||'/'||current_setting('test.request')||'/test.png') then
+    raise exception 'TEST FAILED: private customer data leaked';
+  end if;
 end $$;
 reset role;
 do $$
@@ -80,5 +114,5 @@ begin
     raise exception 'TEST FAILED: customers cannot submit';
   end if;
 end $$;
-select 'PASS: atomic save, validation, retry idempotency, ownership, answer isolation and anonymous denial' as result;
+select 'PASS: atomic save, validation, retry idempotency, ownership, answer isolation, admin review, private attachment access and anonymous denial' as result;
 rollback;

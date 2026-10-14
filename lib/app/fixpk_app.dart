@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/theme/app_theme.dart';
 import '../core/widgets/components.dart';
+import '../core/widgets/brand.dart';
 import 'app_router.dart';
 import 'providers.dart';
 import '../features/requests/presentation/outbox_sync.dart';
@@ -24,15 +25,7 @@ class FixPkApp extends ConsumerWidget {
       loading: () => MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: FixPkTheme.light,
-        home: const Scaffold(
-          body: SafeArea(
-            child: Center(
-              child: CircularProgressIndicator(
-                semanticsLabel: 'Starting FixPK',
-              ),
-            ),
-          ),
-        ),
+        home: const BrandedStartup(),
       ),
       error: (error, stack) => MaterialApp(
         debugShowCheckedModeBanner: false,

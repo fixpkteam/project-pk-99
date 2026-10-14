@@ -121,6 +121,13 @@ class AdminConsolePage extends StatelessWidget {
             subtitle: 'Review accounts, staff roles, and sign-in access.',
             onTap: () => context.push('/admin/users'),
           ),
+          _AdminLink(
+            icon: Icons.request_quote_outlined,
+            title: 'Quote requests',
+            subtitle:
+                'Read customer requirements, contact details, and attachments.',
+            onTap: () => context.push('/staff/requests'),
+          ),
           for (final table in adminContentTables)
             _AdminLink(
               icon: _tableIcon(table.key),
@@ -293,9 +300,9 @@ class _AdminContentListState extends ConsumerState<_AdminContentList> {
                               children: [
                                 Text(
                                   title.isEmpty ? 'Untitled record' : title,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -656,6 +663,40 @@ class _AdminRecordEditorState extends ConsumerState<_AdminRecordEditor> {
       );
 
   Widget _editorField(String field, TextEditingController controller) {
+    if (field == 'audiences') {
+      final selected = (jsonDecode(controller.text) as List).cast<String>();
+      return FormField<List<String>>(
+        initialValue: selected,
+        validator: (_) =>
+            selected.isEmpty ? 'Select at least one audience.' : null,
+        builder: (state) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Customer audiences'),
+            Wrap(
+              spacing: 8,
+              children: [
+                for (final value in ['residential', 'commercial', 'industrial'])
+                  FilterChip(
+                    label: Text(_fieldLabel(value)),
+                    selected: selected.contains(value),
+                    onSelected: (enabled) => setState(() {
+                      enabled ? selected.add(value) : selected.remove(value);
+                      controller.text = jsonEncode(selected);
+                      state.didChange(selected);
+                    }),
+                  ),
+              ],
+            ),
+            if (state.hasError)
+              Text(
+                state.errorText!,
+                style: const TextStyle(color: FixPkColors.error),
+              ),
+          ],
+        ),
+      );
+    }
     final referenceTable = adminReferenceTableForField(
       widget.table.table,
       field,
@@ -878,7 +919,8 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => AppStatePanel(
               title: 'Could not load user accounts',
-              message: 'Deploy the admin-user-management Edge Function and verify its server secrets.',
+              message:
+                  'Deploy the admin-user-management Edge Function and verify its server secrets.',
               isError: true,
               actionLabel: 'Retry',
               onAction: () => ref.invalidate(adminUserPageProvider(1)),

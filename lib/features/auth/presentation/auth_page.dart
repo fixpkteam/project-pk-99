@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../app/providers.dart';
 import '../../../core/widgets/components.dart';
+import '../../../core/widgets/brand.dart';
 import '../../care/data/care_repository.dart';
 import 'location_fields.dart';
 
@@ -146,34 +147,34 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   Widget build(BuildContext context) {
     final creating = widget.createAccount;
     return Scaffold(
-      appBar: AppBar(title: Text(creating ? 'Create account' : 'Sign in')),
+      appBar: AppBar(
+        title: Text(creating ? 'Create account' : 'Sign in'),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: ListView(
-              padding: const EdgeInsets.all(24),
+              keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 32),
               children: [
                 Align(
-                  alignment: Alignment.centerLeft,
-                  child: Image.asset(
-                    'assets/brand/fixpk-app-icon.png',
-                    width: 58,
-                    height: 58,
-                    fit: BoxFit.cover,
-                    semanticLabel: 'FixPK',
-                  ),
+                  alignment: Alignment.center,
+                  child: FixPkLogo(width: creating ? 168 : 192),
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 24),
                 Text(
                   creating ? 'Join FixPK' : 'Welcome back',
-                  style: Theme.of(context).textTheme.headlineMedium,
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   creating
                       ? 'Tell us a little about yourself to get started with FixPK.'
                       : 'Sign in to view and manage your FixPK service requests.',
+                  textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 Form(
@@ -672,8 +673,9 @@ class AccountPage extends ConsumerWidget {
             );
         ref.invalidate(authUserProvider);
         if (context.mounted) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('Profile updated.')));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
         }
       } on Object {
         if (context.mounted) {

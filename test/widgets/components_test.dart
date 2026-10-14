@@ -36,7 +36,8 @@ void main() {
             body: SingleChildScrollView(
               child: ServiceCard(
                 title: 'Construction & Renovation',
-                subtitle: 'Residential, commercial and industrial project requirements',
+                subtitle:
+                    'Residential, commercial and industrial project requirements',
                 icon: Icons.construction,
                 onTap: () {},
               ),
@@ -79,7 +80,7 @@ void main() {
     await tester.enterText(find.byType(TextField), 'not-a-service');
     await tester.pump();
     expect(find.text('No matching services'), findsOneWidget);
-    await tester.tap(find.widgetWithText(FilledButton, 'Clear search'));
+    await tester.tap(find.widgetWithText(FilledButton, 'Clear filters'));
     await tester.pump();
     expect(find.text('Solar Solutions'), findsOneWidget);
   });

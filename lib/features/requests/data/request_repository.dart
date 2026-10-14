@@ -284,25 +284,26 @@ class RequestRepository {
   static const requestFields =
       'id,profile_id,service_id,address_id,service_area_id,public_reference,status,customer_notes,preferred_date,preferred_time,created_at,updated_at';
 
-  Stream<List<CustomerAddress>> watchAddresses(String profileId) =>
-      _cache.watch(
-        'user.$profileId.addresses',
-        () async {
-          final rows = await _client
-              .from('addresses')
-              .select(
-                'id,label,recipient_name,phone,address_line,area,city,province,postal_code,is_default,created_at',
-              )
-              .eq('profile_id', profileId)
-              .order('is_default', ascending: false)
-              .order('created_at', ascending: false);
-          return rows;
-        },
-        (data) => (data as List)
-            .cast<Map<String, dynamic>>()
-            .map(CustomerAddress.fromRow)
-            .toList(growable: false),
-      );
+  Stream<List<CustomerAddress>> watchAddresses(
+    String profileId,
+  ) => _cache.watch(
+    'user.$profileId.addresses',
+    () async {
+      final rows = await _client
+          .from('addresses')
+          .select(
+            'id,label,recipient_name,phone,address_line,area,city,province,postal_code,is_default,created_at',
+          )
+          .eq('profile_id', profileId)
+          .order('is_default', ascending: false)
+          .order('created_at', ascending: false);
+      return rows;
+    },
+    (data) => (data as List)
+        .cast<Map<String, dynamic>>()
+        .map(CustomerAddress.fromRow)
+        .toList(growable: false),
+  );
 
   Future<void> saveAddress({
     required String profileId,
@@ -354,48 +355,49 @@ class RequestRepository {
         .eq('profile_id', profileId);
   }
 
-  Stream<List<ServiceQuestion>> watchQuestions(String serviceId) =>
-      _cache.watch(
-        'questions.$serviceId',
-        () async {
-          final rows = await _client
-              .from('service_questions')
-              .select(
-                'id,service_id,question_key,label,help_text,input_type,is_required,sort_order',
-              )
-              .eq('service_id', serviceId)
-              .order('sort_order');
-          if (rows.isEmpty) {
-            return [<Map<String, dynamic>>[], <Map<String, dynamic>>[]];
-          }
-          final questionIds = rows.map((row) => row['id'].toString()).toList();
-          final optionRows = await _client
-              .from('service_question_options')
-              .select('id,question_id,option_value,option_label,sort_order')
-              .inFilter('question_id', questionIds)
-              .order('sort_order');
-          return [rows, optionRows];
-        },
-        (data) {
-          final groups = data as List;
-          final rows = (groups[0] as List).cast<Map<String, dynamic>>();
-          final optionRows = (groups[1] as List).cast<Map<String, dynamic>>();
-          final optionsByQuestion = <String, List<ServiceQuestionOption>>{};
-          for (final row in optionRows) {
-            optionsByQuestion
-                .putIfAbsent(row['question_id'].toString(), () => [])
-                .add(ServiceQuestionOption.fromRow(row));
-          }
-          return rows
-              .map(
-                (row) => ServiceQuestion.fromRow(
-                  row,
-                  options: optionsByQuestion[row['id'].toString()] ?? const [],
-                ),
-              )
-              .toList(growable: false);
-        },
-      );
+  Stream<List<ServiceQuestion>> watchQuestions(
+    String serviceId,
+  ) => _cache.watch(
+    'questions.$serviceId',
+    () async {
+      final rows = await _client
+          .from('service_questions')
+          .select(
+            'id,service_id,question_key,label,help_text,input_type,is_required,sort_order',
+          )
+          .eq('service_id', serviceId)
+          .order('sort_order');
+      if (rows.isEmpty) {
+        return [<Map<String, dynamic>>[], <Map<String, dynamic>>[]];
+      }
+      final questionIds = rows.map((row) => row['id'].toString()).toList();
+      final optionRows = await _client
+          .from('service_question_options')
+          .select('id,question_id,option_value,option_label,sort_order')
+          .inFilter('question_id', questionIds)
+          .order('sort_order');
+      return [rows, optionRows];
+    },
+    (data) {
+      final groups = data as List;
+      final rows = (groups[0] as List).cast<Map<String, dynamic>>();
+      final optionRows = (groups[1] as List).cast<Map<String, dynamic>>();
+      final optionsByQuestion = <String, List<ServiceQuestionOption>>{};
+      for (final row in optionRows) {
+        optionsByQuestion
+            .putIfAbsent(row['question_id'].toString(), () => [])
+            .add(ServiceQuestionOption.fromRow(row));
+      }
+      return rows
+          .map(
+            (row) => ServiceQuestion.fromRow(
+              row,
+              options: optionsByQuestion[row['id'].toString()] ?? const [],
+            ),
+          )
+          .toList(growable: false);
+    },
+  );
 
   Stream<List<RequestRecord>> watchRequests(String profileId) => _cache.watch(
     'user.$profileId.requests',
@@ -447,24 +449,25 @@ class RequestRepository {
         .toList(growable: false),
   );
 
-  Stream<List<AppointmentRecord>> watchAppointments(String requestId) =>
-      _cache.watch(
-        'user.${_client.auth.currentUser?.id}.appointments.$requestId',
-        () async {
-          final rows = await _client
-              .from('appointments')
-              .select(
-                'id,request_id,survey_id,starts_at,ends_at,status,customer_note,created_at,updated_at',
-              )
-              .eq('request_id', requestId)
-              .order('starts_at', ascending: true);
-          return rows;
-        },
-        (data) => (data as List)
-            .cast<Map<String, dynamic>>()
-            .map(AppointmentRecord.fromRow)
-            .toList(growable: false),
-      );
+  Stream<List<AppointmentRecord>> watchAppointments(
+    String requestId,
+  ) => _cache.watch(
+    'user.${_client.auth.currentUser?.id}.appointments.$requestId',
+    () async {
+      final rows = await _client
+          .from('appointments')
+          .select(
+            'id,request_id,survey_id,starts_at,ends_at,status,customer_note,created_at,updated_at',
+          )
+          .eq('request_id', requestId)
+          .order('starts_at', ascending: true);
+      return rows;
+    },
+    (data) => (data as List)
+        .cast<Map<String, dynamic>>()
+        .map(AppointmentRecord.fromRow)
+        .toList(growable: false),
+  );
 
   Stream<List<QuoteRecord>> watchQuotes(String requestId) => _cache.watch(
     'user.${_client.auth.currentUser?.id}.quotes.$requestId',

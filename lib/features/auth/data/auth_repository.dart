@@ -14,12 +14,12 @@ class AuthRepository {
   User? get currentUser => _client.auth.currentUser;
 
   Future<void> signIn({required String email, required String password}) async {
-    final response = await _client.auth.signInWithPassword(
+    await _client.auth.signInWithPassword(
       email: email.trim(),
       password: password,
     );
-    final user = response.user;
-    if (user != null) await _syncProfile(user);
+    // The Auth trigger creates profiles. A successful login must never depend
+    // on a second network write or an INSERT policy on the profiles table.
   }
 
   Future<AuthResponse> signUp({
@@ -40,10 +40,6 @@ class AuthRepository {
         'city': city.trim(),
       },
     );
-    final user = response.user;
-    if (response.session != null && user != null) {
-      await _syncProfile(user);
-    }
     return response;
   }
 
@@ -80,21 +76,11 @@ class AuthRepository {
     );
     final user = _client.auth.currentUser;
     if (user == null) return;
-    await _client.from('profiles').upsert({
-      'id': user.id,
-      'full_name': name.trim(),
-      'phone': phone.trim(),
-    });
+    await _client
+        .from('profiles')
+        .update({'full_name': name.trim(), 'phone': phone.trim()})
+        .eq('id', user.id);
   }
 
   Future<void> signOut() => _client.auth.signOut();
-
-  Future<void> _syncProfile(User user) async {
-    final metadata = user.userMetadata ?? const <String, dynamic>{};
-    await _client.from('profiles').upsert({
-      'id': user.id,
-      'full_name': metadata['full_name'] ?? metadata['name'] ?? '',
-      'phone': metadata['phone'] ?? '',
-    });
-  }
 }

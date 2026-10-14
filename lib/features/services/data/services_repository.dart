@@ -11,6 +11,8 @@ class ServiceCategory {
     required this.description,
     required this.iconName,
     required this.sortOrder,
+    this.slug = '',
+    this.audiences = const ['residential', 'commercial', 'industrial'],
   });
 
   final String id;
@@ -18,6 +20,8 @@ class ServiceCategory {
   final String description;
   final String iconName;
   final int sortOrder;
+  final String slug;
+  final List<String> audiences;
 
   factory ServiceCategory.fromRow(Map<String, dynamic> row) => ServiceCategory(
     id: '${row['id'] ?? row['slug'] ?? row['name'] ?? row['title'] ?? ''}',
@@ -25,6 +29,10 @@ class ServiceCategory {
     description: '${row['description'] ?? ''}',
     iconName: '${row['icon_name'] ?? row['icon'] ?? ''}',
     sortOrder: _int(row['sort_order']),
+    slug: '${row['slug'] ?? ''}',
+    audiences: row['audiences'] is List
+        ? (row['audiences'] as List).whereType<String>().toList(growable: false)
+        : const ['residential', 'commercial', 'industrial'],
   );
 }
 
@@ -68,13 +76,13 @@ class ServicesRepository {
   final ReadCache _cache;
 
   Stream<ServiceCatalogue> watchCatalogue() => _cache.watch(
-    'services.v1',
+    'services.v2',
     () async {
       // Independent reads run together; unpublished rows never reach the client.
       return Future.wait([
         _client
             .from('service_categories')
-            .select('id,name,description,icon_name,sort_order')
+            .select('id,name,slug,description,icon_name,sort_order,audiences')
             .eq('is_published', true)
             .order('sort_order')
             .order('id'),

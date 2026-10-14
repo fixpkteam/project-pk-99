@@ -191,19 +191,22 @@ void main() {
     },
   );
 
-  test('database rejection needs attention and does not block another valid request', () async {
-    final outbox = box((row, _) async {
-      if (row.id == 'r1') {
-        throw const PostgrestException(message: 'invalid', code: '22023');
-      }
-    });
-    await outbox.enqueue(request(), {});
-    await outbox.enqueue(request(id: 'r2'), {});
-    await outbox.sync();
-    final remaining = await outbox.list('alice');
-    expect(remaining, hasLength(1));
-    expect(remaining.single.needsAttention, true);
-  });
+  test(
+    'database rejection needs attention and does not block another valid request',
+    () async {
+      final outbox = box((row, _) async {
+        if (row.id == 'r1') {
+          throw const PostgrestException(message: 'invalid', code: '22023');
+        }
+      });
+      await outbox.enqueue(request(), {});
+      await outbox.enqueue(request(id: 'r2'), {});
+      await outbox.sync();
+      final remaining = await outbox.list('alice');
+      expect(remaining, hasLength(1));
+      expect(remaining.single.needsAttention, true);
+    },
+  );
 
   test('attachment corruption is visible and never marked delivered', () async {
     final row = request(file: true);

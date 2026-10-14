@@ -43,8 +43,9 @@ void main() {
         isNull,
       );
       expect(
-        const HomeCampaign({'image_path': 'http://example.test/image.png'})
-            .imageUrl,
+        const HomeCampaign({
+          'image_path': 'http://example.test/image.png',
+        }).imageUrl,
         isNull,
       );
       expect(
@@ -52,8 +53,9 @@ void main() {
         '/services',
       );
       expect(
-        const HomeCampaign({'image_path': 'https://example.test/image.png'})
-            .imageUrl,
+        const HomeCampaign({
+          'image_path': 'https://example.test/image.png',
+        }).imageUrl,
         isNotNull,
       );
     },

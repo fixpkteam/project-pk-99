@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/widgets/brand.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -35,7 +36,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       imageLabel: 'Solar panels installed on a residential rooftop',
       eyebrow: 'SOLUTIONS FOR YOUR SPACE',
       title: 'One app. Every solution.',
-      description: 'Explore electrical, solar, AC, security and property services in one place.',
+      description:
+          'Explore electrical, solar, AC, security and property services in one place.',
       icon: Icons.grid_view_rounded,
       caption: 'Find the service that fits your needs.',
     ),
@@ -44,7 +46,8 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       imageLabel: 'A modern commercial building',
       eyebrow: 'FROM IDEA TO DONE',
       title: 'Let’s get your project started.',
-      description: 'Tell us what you need, request a quote and follow the progress with FixPK.',
+      description:
+          'Tell us what you need, request a quote and follow the progress with FixPK.',
       icon: Icons.assignment_turned_in_outlined,
       caption: 'Your requests, quotes and updates. Together.',
     ),
@@ -106,16 +109,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
                   padding: const EdgeInsets.fromLTRB(24, 12, 16, 4),
                   child: Row(
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: Image.asset(
-                          'assets/brand/fixpk-app-icon.png',
-                          width: 48,
-                          height: 48,
-                          cacheWidth: 144,
-                          semanticLabel: 'FixPK',
-                        ),
-                      ),
+                      const FixPkLogo(width: 104),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Row(

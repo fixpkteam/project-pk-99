@@ -31,7 +31,8 @@ class NotificationsPage extends ConsumerWidget {
           data: (items) => items.isEmpty
               ? const AppStatePanel(
                   title: 'You are all caught up',
-                  message: 'FixPK updates about your service requests will appear here.',
+                  message:
+                      'FixPK updates about your service requests will appear here.',
                   icon: Icons.notifications_none_outlined,
                 )
               : RefreshIndicator(
@@ -83,22 +84,23 @@ class NotificationsPage extends ConsumerWidget {
                                 children: [
                                   Text(
                                     item.title,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
                                   ),
                                   const SizedBox(height: 4),
                                   Text(item.body),
                                   if (item.createdAt != null) ...[
                                     const SizedBox(height: 8),
                                     Text(
-                                      MaterialLocalizations.of(context)
-                                          .formatMediumDate(
-                                            item.createdAt!.toLocal(),
-                                          ),
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall,
+                                      MaterialLocalizations.of(
+                                        context,
+                                      ).formatMediumDate(
+                                        item.createdAt!.toLocal(),
+                                      ),
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
                                     ),
                                   ],
                                 ],
@@ -160,7 +162,8 @@ class _SupportPageState extends ConsumerState<SupportPage> {
           data: (items) => items.isEmpty
               ? AppStatePanel(
                   title: 'How can we help?',
-                  message: 'Create a support ticket and the FixPK team will review it.',
+                  message:
+                      'Create a support ticket and the FixPK team will review it.',
                   icon: Icons.support_agent_outlined,
                   actionLabel: 'Create ticket',
                   onAction: () => _openTicket(context, user.id),
@@ -180,9 +183,9 @@ class _SupportPageState extends ConsumerState<SupportPage> {
                               Expanded(
                                 child: Text(
                                   ticket.subject,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
                                 ),
                               ),
                               StatusChip(
@@ -528,7 +531,8 @@ class ReviewsPage extends ConsumerWidget {
           data: (items) => items.isEmpty
               ? const AppStatePanel(
                   title: 'No reviews yet',
-                  message: 'After a FixPK job is completed, you can share feedback from its request details.',
+                  message:
+                      'After a FixPK job is completed, you can share feedback from its request details.',
                   icon: Icons.star_outline,
                 )
               : ListView.separated(
@@ -804,9 +808,19 @@ class _StaffQueues extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 16),
-        Text(
-          'Service request queue',
-          style: Theme.of(context).textTheme.titleLarge,
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Service request queue',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ),
+            TextButton(
+              onPressed: () => context.push('/staff/requests'),
+              child: const Text('View all'),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         requests.when(
@@ -822,7 +836,9 @@ class _StaffQueues extends ConsumerWidget {
                         child: ListTile(
                           contentPadding: EdgeInsets.zero,
                           title: Text(request.reference),
-                          subtitle: Text('Service ${request.serviceId}'),
+                          subtitle: Text(request.serviceName),
+                          onTap: () =>
+                              context.push('/staff/requests/${request.id}'),
                           trailing: StatusChip(
                             label: _statusName(request.status),
                           ),

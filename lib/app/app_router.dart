@@ -8,9 +8,9 @@ import '../features/auth/presentation/reset_password_page.dart';
 import '../features/onboarding/presentation/onboarding_page.dart';
 
 import '../core/widgets/components.dart';
+import '../features/admin/presentation/request_management_pages.dart';
 import '../features/foundation/presentation/component_gallery.dart';
-import '../features/foundation/presentation/foundation_pages.dart'
-    show HomePage;
+import '../features/foundation/presentation/home_page.dart' show HomePage;
 import '../features/auth/presentation/auth_page.dart'
     show AccountPage, AuthPage;
 import '../features/admin/presentation/admin_pages.dart'
@@ -157,6 +157,15 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
           AdminContentPage(tableKey: state.pathParameters['tableKey']!),
     ),
     GoRoute(
+      path: '/staff/requests',
+      builder: (context, state) => const StaffRequestsPage(),
+    ),
+    GoRoute(
+      path: '/staff/requests/:requestId',
+      builder: (context, state) =>
+          StaffRequestDetailPage(requestId: state.pathParameters['requestId']!),
+    ),
+    GoRoute(
       path: '/staff',
       builder: (context, state) => const StaffOperationsPage(),
     ),
@@ -184,6 +193,8 @@ GoRouter createRouter({String initialLocation = '/home'}) => GoRouter(
               path: '/services',
               builder: (context, state) => ServicesPage(
                 enquiryContext: state.uri.queryParameters['enquiry'],
+                initialCategory: state.uri.queryParameters['category'],
+                focusSearch: state.uri.queryParameters['search'] == '1',
               ),
             ),
           ],
@@ -249,7 +260,25 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) => Scaffold(
     appBar: shell.currentIndex == 0
         ? null
-        : AppBar(title: Text(titles[shell.currentIndex])),
+        : AppBar(
+            title: Text(titles[shell.currentIndex]),
+            centerTitle: true,
+            leading: shell.currentIndex == 1
+                ? IconButton(
+                    tooltip: 'Back',
+                    onPressed: () {
+                      if (GoRouterState.of(
+                        context,
+                      ).uri.queryParameters.containsKey('category')) {
+                        context.go('/services');
+                      } else {
+                        shell.goBranch(0);
+                      }
+                    },
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  )
+                : null,
+          ),
     body: SafeArea(top: shell.currentIndex == 0, child: shell),
     bottomNavigationBar: NavigationBar(
       selectedIndex: shell.currentIndex,

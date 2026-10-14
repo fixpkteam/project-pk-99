@@ -26,12 +26,13 @@ class ReadCache {
     try {
       final fresh = await fetch().timeout(const Duration(seconds: 15));
       final value = decode(fresh);
+      // Render fresh content before waiting for a slower device's disk write.
+      yield value;
       try {
         await store.writeJson('cache.$key', fresh);
       } on Object {
         // Cache storage is best effort. Critical outbox writes are not.
       }
-      yield value;
     } on Object {
       if (!emitted) rethrow;
     }

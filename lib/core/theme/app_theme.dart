@@ -121,7 +121,25 @@ abstract final class FixPkTheme {
         ),
         errorMaxLines: 3,
       ),
-      navigationBarTheme: const NavigationBarThemeData(
+      navigationBarTheme: NavigationBarThemeData(
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? FixPkColors.action
+                : FixPkColors.muted,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontSize: 11,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w700
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? FixPkColors.action
+                : FixPkColors.muted,
+          ),
+        ),
         backgroundColor: Colors.white,
         indicatorColor: FixPkColors.informationSurface,
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,

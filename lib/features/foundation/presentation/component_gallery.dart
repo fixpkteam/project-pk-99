@@ -238,7 +238,8 @@ class _ComponentGalleryState extends State<ComponentGallery> {
                   final confirmed = await showConfirmation(
                     context,
                     title: 'Discard this example?',
-                    message: 'This demonstrates a confirmation dialog. No customer data is affected.',
+                    message:
+                        'This demonstrates a confirmation dialog. No customer data is affected.',
                     confirmLabel: 'Discard example',
                   );
                   if (context.mounted && confirmed) {

@@ -52,7 +52,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
+    expect(find.text('Engineering\nSolutions.'), findsOneWidget);
     for (final index in [1, 2, 3, 4, 0]) {
       await tester.tap(find.byType(NavigationDestination).at(index));
       await tester.pumpAndSettle();

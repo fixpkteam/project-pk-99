@@ -22,7 +22,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
-    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
+    expect(find.text('Engineering\nSolutions.'), findsOneWidget);
     await tester.tap(find.byType(NavigationDestination).at(1));
     await tester.pumpAndSettle();
     await tester.enterText(find.byType(TextField), 'CCTV');
@@ -53,7 +53,7 @@ void main() {
     expect(find.text('This page is unavailable'), findsOneWidget);
     await tester.tap(find.text('Go home'));
     await tester.pumpAndSettle();
-    expect(find.text('Powering better\nliving, every day.'), findsOneWidget);
+    expect(find.text('Engineering\nSolutions.'), findsOneWidget);
   });
 
   testWidgets('product and project routes have useful preview states', (

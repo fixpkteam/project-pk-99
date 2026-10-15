@@ -103,8 +103,9 @@ String serviceVisualKey(String value) {
   if (text.contains('plumb')) return 'plumbing';
   if (text.contains('aluminium') || text.contains('glass')) return 'aluminium';
   if (text.contains('upvc')) return 'upvc';
-  if (text.contains('construction') || text.contains('renovation'))
+  if (text.contains('construction') || text.contains('renovation')) {
     return 'construction';
+  }
   if (text.contains('print')) return 'printing';
   if ([
     'digital',
@@ -113,8 +114,9 @@ String serviceVisualKey(String value) {
     'social media',
     'promotion',
     'influencer',
-  ].any(text.contains))
+  ].any(text.contains)) {
     return 'digital';
+  }
   return 'maintenance';
 }
 

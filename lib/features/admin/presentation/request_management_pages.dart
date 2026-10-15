@@ -30,8 +30,9 @@ class RequestStaffGate extends ConsumerWidget {
       actionLabel: 'Retry',
       onAction: () {
         ref.invalidate(authUserProvider);
-        if (user.value != null)
+        if (user.value != null) {
           ref.invalidate(staffRoleListProvider(user.value!.id));
+        }
       },
     );
     return user.when(
@@ -206,8 +207,8 @@ class _RequestDetail extends ConsumerWidget {
                 title: 'Request unavailable',
                 message: 'It may have been removed or your account may not have access.',
               );
-            final profile = row['profiles'] as Map? ?? {};
-            final address = row['addresses'] as Map? ?? {};
+            final profile = row['profiles'] as Map<String, dynamic>? ?? {};
+            final address = row['addresses'] as Map<String, dynamic>? ?? {};
             final answers = row['service_request_answers'] as List? ?? [];
             final files = row['request_attachments'] as List? ?? [];
             return RefreshIndicator(
@@ -220,7 +221,7 @@ class _RequestDetail extends ConsumerWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   Text(
-                    '${(row['services'] as Map?)?['name'] ?? 'Service enquiry'}',
+                    '${(row['services'] as Map<String, dynamic>?)?['name'] ?? 'Service enquiry'}',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   SelectableText('${row['public_reference'] ?? row['id']}'),
@@ -267,10 +268,10 @@ class _RequestDetail extends ConsumerWidget {
                     'Additional notes',
                     '${row['customer_notes'] ?? ''}',
                   ),
-                  for (final answer in answers.whereType<Map>())
+                  for (final answer in answers.whereType<Map<String, dynamic>>())
                     _section(
                       context,
-                      '${(answer['service_questions'] as Map?)?['label'] ?? 'Requirement'}',
+                      '${(answer['service_questions'] as Map<String, dynamic>?)?['label'] ?? 'Requirement'}',
                       answer['answer_value'] is List
                           ? (answer['answer_value'] as List).join(', ')
                           : '${answer['answer_value'] ?? ''}',
@@ -281,7 +282,7 @@ class _RequestDetail extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   if (files.isEmpty) const Text('No attachments supplied.'),
-                  for (final file in files.whereType<Map>())
+                  for (final file in files.whereType<Map<String, dynamic>>())
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.attach_file),

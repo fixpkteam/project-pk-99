@@ -110,7 +110,7 @@ class _RequestQueue extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               itemCount: items.length + 2,
               itemBuilder: (context, index) {
-                if (index == 0)
+                if (index == 0) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
@@ -119,7 +119,8 @@ class _RequestQueue extends ConsumerWidget {
                           : 'Customer enquiries · pull down to refresh',
                     ),
                   );
-                if (index == items.length + 1)
+                } 
+                if (index == items.length + 1) {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -136,6 +137,7 @@ class _RequestQueue extends ConsumerWidget {
                       ),
                     ],
                   );
+                }
                 final item = items[index - 1];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -202,11 +204,12 @@ class _RequestDetail extends ConsumerWidget {
             onAction: () => ref.invalidate(provider),
           ),
           data: (row) {
-            if (row == null)
+            if (row == null) {
               return const AppStatePanel(
                 title: 'Request unavailable',
                 message: 'It may have been removed or your account may not have access.',
               );
+             }
             final profile = row['profiles'] as Map<String, dynamic>? ?? {};
             final address = row['addresses'] as Map<String, dynamic>? ?? {};
             final answers = row['service_request_answers'] as List? ?? [];
@@ -317,20 +320,22 @@ class _RequestDetail extends ConsumerWidget {
   ) async {
     try {
       if (file['bucket_id'] != 'request-attachments' ||
-          file['object_path'] is! String)
+          file['object_path'] is! String) {
         throw const FormatException('Invalid attachment');
+       }
       final url = await ref
           .read(careRepositoryProvider)
           .staffAttachmentUrl(file['object_path'] as String);
       await Clipboard.setData(ClipboardData(text: url));
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Download link copied. It expires in 10 minutes.'),
           ),
         );
+       }
     } on Object {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -338,6 +343,7 @@ class _RequestDetail extends ConsumerWidget {
             ),
           ),
         );
+       }
     }
   }
 }

@@ -316,7 +316,7 @@ class _RequestDetail extends ConsumerWidget {
   Future<void> _copyAttachment(
     BuildContext context,
     WidgetRef ref,
-    Map file,
+    Map<String, dynamic> file,
   ) async {
     try {
       if (file['bucket_id'] != 'request-attachments' ||

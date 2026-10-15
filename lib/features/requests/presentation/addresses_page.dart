@@ -39,8 +39,7 @@ class AddressesPage extends ConsumerWidget {
           data: (items) => items.isEmpty
               ? AppStatePanel(
                   title: 'No saved addresses yet',
-                  message:
-                      'Add an address so it is ready when you request a service.',
+                  message: 'Add an address so it is ready when you request a service.',
                   icon: Icons.location_on_outlined,
                   actionLabel: 'Add address',
                   onAction: () => _openEditor(context, ref),
@@ -60,9 +59,9 @@ class AddressesPage extends ConsumerWidget {
                               Expanded(
                                 child: Text(
                                   address.label,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
                                 ),
                               ),
                               if (address.isDefault)

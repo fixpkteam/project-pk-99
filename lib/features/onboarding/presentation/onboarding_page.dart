@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+
 import '../../../core/widgets/brand.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -36,8 +38,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       imageLabel: 'Solar panels installed on a residential rooftop',
       eyebrow: 'SOLUTIONS FOR YOUR SPACE',
       title: 'One app. Every solution.',
-      description:
-          'Explore electrical, solar, AC, security and property services in one place.',
+      description: 'Explore electrical, solar, AC, security and property services in one place.',
       icon: Icons.grid_view_rounded,
       caption: 'Find the service that fits your needs.',
     ),
@@ -46,8 +47,7 @@ class _OnboardingPageState extends ConsumerState<OnboardingPage> {
       imageLabel: 'A modern commercial building',
       eyebrow: 'FROM IDEA TO DONE',
       title: 'Let’s get your project started.',
-      description:
-          'Tell us what you need, request a quote and follow the progress with FixPK.',
+      description: 'Tell us what you need, request a quote and follow the progress with FixPK.',
       icon: Icons.assignment_turned_in_outlined,
       caption: 'Your requests, quotes and updates. Together.',
     ),

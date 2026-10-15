@@ -44,9 +44,8 @@ void main() {
         }),
       );
       addTearDown(client.dispose);
-      await AuthRepository(
-        client,
-      ).signIn(email: ' customer@example.test ', password: 'test-password');
+      await AuthRepository(client)
+          .signIn(email: ' customer@example.test ', password: 'test-password');
       expect(client.auth.currentUser?.id, 'customer-1');
       expect(
         calls.length,

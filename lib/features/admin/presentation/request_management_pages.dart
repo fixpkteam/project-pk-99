@@ -159,9 +159,8 @@ class _RequestQueue extends ConsumerWidget {
                         StatusChip(label: item.status.replaceAll('_', ' ')),
                         if (item.createdAt != null)
                           Text(
-                            MaterialLocalizations.of(
-                              context,
-                            ).formatMediumDate(item.createdAt!.toLocal()),
+                            MaterialLocalizations.of(context)
+                                .formatMediumDate(item.createdAt!.toLocal()),
                           ),
                       ],
                     ),
@@ -205,8 +204,7 @@ class _RequestDetail extends ConsumerWidget {
             if (row == null)
               return const AppStatePanel(
                 title: 'Request unavailable',
-                message:
-                    'It may have been removed or your account may not have access.',
+                message: 'It may have been removed or your account may not have access.',
               );
             final profile = row['profiles'] as Map? ?? {};
             final address = row['addresses'] as Map? ?? {};

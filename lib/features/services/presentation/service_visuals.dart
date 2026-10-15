@@ -192,10 +192,8 @@ class ServiceRow extends StatelessWidget {
                         subtitle,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: FixPkColors.muted,
-                          height: 1.3,
-                        ),
+                        style: Theme.of(context).textTheme.bodyMedium
+                            ?.copyWith(color: FixPkColors.muted, height: 1.3),
                       ),
                     ],
                   ),

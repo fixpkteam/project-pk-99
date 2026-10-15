@@ -673,9 +673,8 @@ class AccountPage extends ConsumerWidget {
             );
         ref.invalidate(authUserProvider);
         if (context.mounted) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
+          ScaffoldMessenger.of(context)
+              .showSnackBar(const SnackBar(content: Text('Profile updated.')));
         }
       } on Object {
         if (context.mounted) {

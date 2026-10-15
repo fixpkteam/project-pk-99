@@ -44,6 +44,14 @@ cp config/development.example.json config/development.json
 flutter run --dart-define-from-file=config/development.json
 ```
 
+For an installable **Supabase-connected Android debug APK**, use the checked-in `config/connected.example.json` build configuration. This example includes only the public project URL and publishable client key, never Supabase secret/service-role credentials. It sets `FOUNDATION_PREVIEW=false`, so sign-up and sign-in contact the live project:
+
+```sh
+flutter build apk --debug --dart-define-from-file=config/connected.example.json
+```
+
+Install `build/app/outputs/flutter-apk/app-debug.apk` to test authentication. The GitHub Actions pipeline also uploads the connected debug APK on pushes and PRs. Do not mistake the preview-only debug APK for the connected build. A production app-store release needs approved signing and end-to-end device validation.
+
 For a browser review, select an installed Chrome device:
 
 ```sh

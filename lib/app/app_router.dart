@@ -267,9 +267,8 @@ class AppShell extends StatelessWidget {
                 ? IconButton(
                     tooltip: 'Back',
                     onPressed: () {
-                      if (GoRouterState.of(
-                        context,
-                      ).uri.queryParameters.containsKey('category')) {
+                      if (GoRouterState.of(context).uri.queryParameters
+                          .containsKey('category')) {
                         context.go('/services');
                       } else {
                         shell.goBranch(0);

@@ -300,9 +300,9 @@ class _AdminContentListState extends ConsumerState<_AdminContentList> {
                               children: [
                                 Text(
                                   title.isEmpty ? 'Untitled record' : title,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -919,8 +919,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (_, _) => AppStatePanel(
               title: 'Could not load user accounts',
-              message:
-                  'Deploy the admin-user-management Edge Function and verify its server secrets.',
+              message: 'Deploy the admin-user-management Edge Function and verify its server secrets.',
               isError: true,
               actionLabel: 'Retry',
               onAction: () => ref.invalidate(adminUserPageProvider(1)),

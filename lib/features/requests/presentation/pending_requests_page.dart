@@ -31,9 +31,9 @@ class _PendingRequestsPageState extends ConsumerState<PendingRequestsPage> {
     }
   }
 
-  void _message(String message) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(message)));
+  void _message(String message) =>
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(message)));
 
   Future<void> _remove(QueuedRequest row) async {
     final confirmed = await showDialog<bool>(
@@ -94,8 +94,7 @@ class _PendingRequestsPageState extends ConsumerState<PendingRequestsPage> {
                       const Center(child: CircularProgressIndicator()),
                   error: (_, _) => AppStatePanel(
                     title: 'Saved requests could not load',
-                    message:
-                        'Check device storage and try again. Your saved data has not been replaced.',
+                    message: 'Check device storage and try again. Your saved data has not been replaced.',
                     actionLabel: 'Retry',
                     onAction: () =>
                         ref.invalidate(pendingRequestsProvider(owner)),
@@ -133,9 +132,9 @@ class _PendingRequestsPageState extends ConsumerState<PendingRequestsPage> {
                               children: [
                                 Text(
                                   row.serviceName,
-                                  style: Theme.of(
-                                    context,
-                                  ).textTheme.titleMedium,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
                                 ),
                                 const SizedBox(height: 8),
                                 Text(

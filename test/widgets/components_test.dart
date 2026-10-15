@@ -36,8 +36,7 @@ void main() {
             body: SingleChildScrollView(
               child: ServiceCard(
                 title: 'Construction & Renovation',
-                subtitle:
-                    'Residential, commercial and industrial project requirements',
+                subtitle: 'Residential, commercial and industrial project requirements',
                 icon: Icons.construction,
                 onTap: () {},
               ),

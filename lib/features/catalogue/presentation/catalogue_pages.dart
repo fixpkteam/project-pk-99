@@ -777,9 +777,8 @@ class _PreviewProductCard extends StatelessWidget {
               const SizedBox(height: 10),
               Text(
                 price,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(color: FixPkColors.action),
+                style: Theme.of(context).textTheme.titleSmall
+                    ?.copyWith(color: FixPkColors.action),
               ),
               const SizedBox(height: 8),
               const Row(

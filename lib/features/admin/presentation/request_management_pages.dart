@@ -119,7 +119,7 @@ class _RequestQueue extends ConsumerWidget {
                           : 'Customer enquiries · pull down to refresh',
                     ),
                   );
-                } 
+                }
                 if (index == items.length + 1) {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -209,7 +209,7 @@ class _RequestDetail extends ConsumerWidget {
                 title: 'Request unavailable',
                 message: 'It may have been removed or your account may not have access.',
               );
-             }
+            }
             final profile = row['profiles'] as Map<String, dynamic>? ?? {};
             final address = row['addresses'] as Map<String, dynamic>? ?? {};
             final answers = row['service_request_answers'] as List? ?? [];
@@ -271,7 +271,8 @@ class _RequestDetail extends ConsumerWidget {
                     'Additional notes',
                     '${row['customer_notes'] ?? ''}',
                   ),
-                  for (final answer in answers.whereType<Map<String, dynamic>>())
+                  for (final answer
+                      in answers.whereType<Map<String, dynamic>>())
                     _section(
                       context,
                       '${(answer['service_questions'] as Map<String, dynamic>?)?['label'] ?? 'Requirement'}',
@@ -322,7 +323,7 @@ class _RequestDetail extends ConsumerWidget {
       if (file['bucket_id'] != 'request-attachments' ||
           file['object_path'] is! String) {
         throw const FormatException('Invalid attachment');
-       }
+      }
       final url = await ref
           .read(careRepositoryProvider)
           .staffAttachmentUrl(file['object_path'] as String);
@@ -333,7 +334,7 @@ class _RequestDetail extends ConsumerWidget {
             content: Text('Download link copied. It expires in 10 minutes.'),
           ),
         );
-       }
+      }
     } on Object {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -343,7 +344,7 @@ class _RequestDetail extends ConsumerWidget {
             ),
           ),
         );
-       }
+      }
     }
   }
 }

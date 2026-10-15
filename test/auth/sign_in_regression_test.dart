@@ -16,7 +16,7 @@ void main() {
         'public-test-key',
         httpClient: MockClient((request) async {
           calls.add(request);
-          if (request.url.path == '/auth/v1/token')
+          if (request.url.path == '/auth/v1/token') {
             return http.Response(
               jsonEncode({
                 'access_token': 'test-session-token',
@@ -29,13 +29,14 @@ void main() {
                   'email': 'customer@example.test',
                   'created_at': '2026-10-14T00:00:00Z',
                   'email_confirmed_at': '2026-10-14T00:00:00Z',
-                  'app_metadata': {},
+                  'app_metadata': <String, dynamic>{},
                   'user_metadata': {'full_name': 'Customer'},
                 },
               }),
               200,
               headers: {'content-type': 'application/json'},
             );
+          }
           return http.Response(
             '{"code":"42501","message":"profile insert forbidden"}',
             403,

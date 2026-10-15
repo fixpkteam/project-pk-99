@@ -65,7 +65,7 @@ void main() {
                     },
                   },
                 ],
-                'request_attachments': [],
+                'request_attachments': <Map<String, dynamic>>[],
               },
             ),
           ],

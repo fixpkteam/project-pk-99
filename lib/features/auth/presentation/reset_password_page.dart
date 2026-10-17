@@ -40,9 +40,7 @@ class _ResetPasswordPageState extends ConsumerState<ResetPasswordPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            error is AuthException
-                ? error.message
-                : 'Could not update your password. Check your connection and try again.',
+            error is AuthException ? error.message : 'Could not update your password. Check your connection and try again.',
           ),
         ),
       );

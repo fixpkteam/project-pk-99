@@ -18,9 +18,8 @@ void main() {
       ('Roboto', 'Roboto-Regular.ttf'),
       ('MaterialIcons', 'MaterialIcons-Regular.otf'),
     ]) {
-      final bytes = File(
-        '$sdk/bin/cache/artifacts/material_fonts/$filename',
-      ).readAsBytesSync();
+      final bytes = File('$sdk/bin/cache/artifacts/material_fonts/$filename')
+          .readAsBytesSync();
       await (FontLoader(
         family,
       )..addFont(Future.value(ByteData.sublistView(bytes)))).load();

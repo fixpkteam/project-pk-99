@@ -78,9 +78,8 @@ class StatusChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: Theme.of(
-          context,
-        ).textTheme.labelSmall?.copyWith(color: foreground),
+        style: Theme.of(context).textTheme.labelSmall
+            ?.copyWith(color: foreground),
       ),
     );
   }
@@ -151,9 +150,8 @@ class ServiceCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 subtitle,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: FixPkColors.body),
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: FixPkColors.body),
               ),
             ],
           ),

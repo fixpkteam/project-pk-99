@@ -1,4 +1,4 @@
-# FixPK polish and launch review — 14 October 2026
+# FixPK polish and launch review — updated 17 October 2026
 
 ## Requested work
 
@@ -61,4 +61,6 @@ Supabase advisories still include intentional role-separated policies and guarde
 
 ## Automated verification
 
-Results and CI artifact links will be recorded here after the final pipeline completes. The local analyzer snapshot crashes in this workspace; the clean GitHub runner is the authoritative static-analysis/build gate.
+The pinned Flutter 3.47.7 / Dart 3.13.5 tools now pass static analysis with no issues, and all 89 unit/widget tests pass locally on 17 October. The tests include the confirmed-account sign-in regression, staff request detail navigation and authorization, offline request delivery, and small-screen/large-text layouts. Formatting uses the same bundled Dart SDK as CI; the earlier damaged local tool snapshots were repaired.
+
+Native CI results and artifact links will be recorded here when the final pipeline completes. Automated test success does not replace the physical-device, email/callback and authenticated business acceptance checks listed above.

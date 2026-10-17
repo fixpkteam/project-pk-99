@@ -104,11 +104,10 @@ class QueuedRequest {
       });
 }
 
-typedef RequestSender =
-    Future<void> Function(
-      QueuedRequest request,
-      Future<Uint8List> Function(OutboxFile) readFile,
-    );
+typedef RequestSender = Future<void> Function(
+  QueuedRequest request,
+  Future<Uint8List> Function(OutboxFile) readFile,
+);
 
 class RequestOutbox {
   RequestOutbox({

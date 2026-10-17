@@ -1,5 +1,7 @@
 # FixPK performance, offline delivery and launch audit
 
+For the current service catalogue, redesigned screens, authentication fix and latest build results, see [the October polish and launch review](OCTOBER_POLISH_TASKS.md). The dated findings below are historical; the service catalogue has since been published.
+
 Audit date: 13 October 2026. This document supersedes the older delivery status notes for the changes below. Passing a build is not approval for a public store release.
 
 ## Implemented and verified in this audit

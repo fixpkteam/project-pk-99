@@ -30,8 +30,9 @@ class RequestStaffGate extends ConsumerWidget {
       actionLabel: 'Retry',
       onAction: () {
         ref.invalidate(authUserProvider);
-        if (user.value != null)
+        if (user.value != null) {
           ref.invalidate(staffRoleListProvider(user.value!.id));
+        }
       },
     );
     return user.when(
@@ -109,7 +110,7 @@ class _RequestQueue extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               itemCount: items.length + 2,
               itemBuilder: (context, index) {
-                if (index == 0)
+                if (index == 0) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: Text(
@@ -118,7 +119,8 @@ class _RequestQueue extends ConsumerWidget {
                           : 'Customer enquiries · pull down to refresh',
                     ),
                   );
-                if (index == items.length + 1)
+                }
+                if (index == items.length + 1) {
                   return Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -135,6 +137,7 @@ class _RequestQueue extends ConsumerWidget {
                       ),
                     ],
                   );
+                }
                 final item = items[index - 1];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
@@ -159,9 +162,8 @@ class _RequestQueue extends ConsumerWidget {
                         StatusChip(label: item.status.replaceAll('_', ' ')),
                         if (item.createdAt != null)
                           Text(
-                            MaterialLocalizations.of(
-                              context,
-                            ).formatMediumDate(item.createdAt!.toLocal()),
+                            MaterialLocalizations.of(context)
+                                .formatMediumDate(item.createdAt!.toLocal()),
                           ),
                       ],
                     ),
@@ -202,16 +204,21 @@ class _RequestDetail extends ConsumerWidget {
             onAction: () => ref.invalidate(provider),
           ),
           data: (row) {
-            if (row == null)
+            if (row == null) {
               return const AppStatePanel(
                 title: 'Request unavailable',
-                message:
-                    'It may have been removed or your account may not have access.',
+                message: 'It may have been removed or your account may not have access.',
               );
-            final profile = row['profiles'] as Map? ?? {};
-            final address = row['addresses'] as Map? ?? {};
-            final answers = row['service_request_answers'] as List? ?? [];
-            final files = row['request_attachments'] as List? ?? [];
+            }
+            final profile =
+                row['profiles'] as Map<String, dynamic>? ?? <String, dynamic>{};
+            final address =
+                row['addresses'] as Map<String, dynamic>? ??
+                <String, dynamic>{};
+            final answers =
+                row['service_request_answers'] as List<dynamic>? ?? <dynamic>[];
+            final files =
+                row['request_attachments'] as List<dynamic>? ?? <dynamic>[];
             return RefreshIndicator(
               onRefresh: () async {
                 ref.invalidate(provider);
@@ -222,7 +229,7 @@ class _RequestDetail extends ConsumerWidget {
                 physics: const AlwaysScrollableScrollPhysics(),
                 children: [
                   Text(
-                    '${(row['services'] as Map?)?['name'] ?? 'Service enquiry'}',
+                    '${(row['services'] as Map<String, dynamic>?)?['name'] ?? 'Service enquiry'}',
                     style: Theme.of(context).textTheme.headlineSmall,
                   ),
                   SelectableText('${row['public_reference'] ?? row['id']}'),
@@ -269,10 +276,11 @@ class _RequestDetail extends ConsumerWidget {
                     'Additional notes',
                     '${row['customer_notes'] ?? ''}',
                   ),
-                  for (final answer in answers.whereType<Map>())
+                  for (final answer
+                      in answers.whereType<Map<String, dynamic>>())
                     _section(
                       context,
-                      '${(answer['service_questions'] as Map?)?['label'] ?? 'Requirement'}',
+                      '${(answer['service_questions'] as Map<String, dynamic>?)?['label'] ?? 'Requirement'}',
                       answer['answer_value'] is List
                           ? (answer['answer_value'] as List).join(', ')
                           : '${answer['answer_value'] ?? ''}',
@@ -283,7 +291,7 @@ class _RequestDetail extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                   if (files.isEmpty) const Text('No attachments supplied.'),
-                  for (final file in files.whereType<Map>())
+                  for (final file in files.whereType<Map<String, dynamic>>())
                     ListTile(
                       contentPadding: EdgeInsets.zero,
                       leading: const Icon(Icons.attach_file),
@@ -314,24 +322,26 @@ class _RequestDetail extends ConsumerWidget {
   Future<void> _copyAttachment(
     BuildContext context,
     WidgetRef ref,
-    Map file,
+    Map<String, dynamic> file,
   ) async {
     try {
       if (file['bucket_id'] != 'request-attachments' ||
-          file['object_path'] is! String)
+          file['object_path'] is! String) {
         throw const FormatException('Invalid attachment');
+      }
       final url = await ref
           .read(careRepositoryProvider)
           .staffAttachmentUrl(file['object_path'] as String);
       await Clipboard.setData(ClipboardData(text: url));
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Download link copied. It expires in 10 minutes.'),
           ),
         );
+      }
     } on Object {
-      if (context.mounted)
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -339,6 +349,7 @@ class _RequestDetail extends ConsumerWidget {
             ),
           ),
         );
+      }
     }
   }
 }

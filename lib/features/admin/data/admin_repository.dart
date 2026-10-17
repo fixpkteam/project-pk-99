@@ -184,8 +184,7 @@ const adminContentTables = <AdminContentTable>[
     table: 'banners',
     label: 'Home banners',
     titleField: 'title',
-    description:
-        'Home campaigns. Use an HTTPS image URL and an app path such as /services. Optional dates control visibility.',
+    description: 'Home campaigns. Use an HTTPS image URL and an app path such as /services. Optional dates control visibility.',
     createValues: {
       'title': '',
       'body': '',
@@ -202,8 +201,7 @@ const adminContentTables = <AdminContentTable>[
     table: 'app_content',
     label: 'App content',
     titleField: 'content_key',
-    description:
-        'Legal pages: use privacy_policy or service_terms as the content key, with body JSON containing a text field.',
+    description: 'Legal pages: use privacy_policy or service_terms as the content key, with body JSON containing a text field.',
     createValues: {
       'content_key': '',
       'title': '',
